@@ -90,8 +90,6 @@ TTree* MakePrelimDataTree(TString run, vector<FILE*> fin)
     ULong64_t timeLast[numchannels];
     Long64_t  EnergyDepLast[numchannels];
     ULong64_t timeAdopt=0;
-    Long64_t  TimeDiff_before[numchannels], TimeDiff_after[numchannels], TimeDiff_reverse[numchannels];
-    Long64_t  EnergyDep_before[numchannels], EnergyDep_after[numchannels], EnergyDep_reverse[numchannels];
     
     TString caenFileName;
 
@@ -115,10 +113,6 @@ TTree* MakePrelimDataTree(TString run, vector<FILE*> fin)
         num_time_jumps[i] = 0;
         LostTrig[i] = 0;
         TotTrig[i] = 0;
-        TimeDiff_before[i] = 0;
-		TimeDiff_after[i] = 0;
-		TimeDiff_reverse[i] = 0;
-		EnergyDep_reverse[i] = 0;
 		//cout << "mintime: " << mintime << endl;
         
         for (j=0;j<max_num_jumps;j++) {
@@ -147,12 +141,6 @@ TTree* MakePrelimDataTree(TString run, vector<FILE*> fin)
     Data->Branch("saturation",&saturation,"saturation/O");
     Data->Branch("ADCout",&ADCout,"ADCout/O");
     Data->Branch("Time",&timeAdopt,"Time/l");
-    
-    for (i=0;i<numchannels;i++) {
-		Data->Branch(Form("TimeDiff_before%d",i),&TimeDiff_before[i],Form("TimeDiff%d/L",i));
-		Data->Branch(Form("EnergyDep_before%d",i),&EnergyDep_before[i],Form("EnergyDep%d/L",i));
-	}
-    
     Data->Branch("Extra",&extra,"Extra/i");
 
 
@@ -281,10 +269,6 @@ TTree* MakePrelimDataTree(TString run, vector<FILE*> fin)
 					cout << "There was blind period in " << detName[det].Data() << " at " << timeLast[det]/1.0E12 << "s with length of " << (timeAdopt-timeLast[det])/1.0E12 << "s" << endl;
 				}
 				
-				//save the previous timestamp for a given detector, and fill the tree
-				//timeLast[det] = timeAdopt;
-				//EnergyDepLast[det] = adc;
-				//if(p<100){cout << EnergyDep_before2 << endl;}
 				Data->Fill();
 			}
 			
