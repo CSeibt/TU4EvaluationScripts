@@ -106,117 +106,55 @@ vector<Event*> TreeEntries(
 	}
 	return TreeEvents;
 }
-/*
-bool OrderFunction(Event* A, Event* B){
-	return A->Time < B->Time;
-};
 
-vector<Event*> AddTimeDifferences(
+void AddTimeDifferences(
 	vector<Event*> GoodEvents
 ){
-	//Sorting Process
-	cout << "Sorting events with ascending time order ..." << endl;
-	sort(GoodEvents.begin(), GoodEvents.end(), OrderFunction);
-	cout << "Finished sorting events" << endl;
-
 	//Variable initilization
-	Event* LastEventIn0 = NULL;
-	Event* LastEventIn1 = NULL;
-	ULong64_t i = 0;
+	Event* LastEventIn[Ndet];
+	
+	// Dummy events for events which may not have a previous event
+	for (int det = 0; det < Ndet; det++) {
+		LastEventIn[det] = new Event;
+		LastEventIn[det]->Adc = 0;
+		LastEventIn[det]->Det = det;
+		LastEventIn[det]->Time = 0;
+	}
 
-	//TimeDiffBefore and EnergyDepBefore for Events which may not have previous Event
-	cout << "Start determining TimeDiffBefore and EnergyDepBefore ..." << endl;
-	do
-	{
-		if(LastEventIn0 != NULL) {
-			GoodEvents[i]->TimeDiffBefore0 = GoodEvents[i]->Time - LastEventIn0->Time;
-			GoodEvents[i]->EnergyDepBefore0 = LastEventIn0->Adc;
-			}
-		if(LastEventIn1 != NULL) {
-			GoodEvents[i]->TimeDiffBefore1 = GoodEvents[i]->Time - LastEventIn1->Time;
-			GoodEvents[i]->EnergyDepBefore1 = LastEventIn1->Adc;
-			}
-		if(GoodEvents[i]->Det == 0){
-			LastEventIn0 = GoodEvents[i];
-		}
-		if(GoodEvents[i]->Det == 1){
-			LastEventIn1 = GoodEvents[i];
-		}
-		i++;
-	} while (i < GoodEvents.size() && (LastEventIn0==NULL || LastEventIn1==NULL));
-	//Just a test of whether I did something wrong
-	if(LastEventIn0 != NULL && LastEventIn1 != NULL){
-		cout << "Two Previous events are found" << endl; 
-	}
-	else {
-		cout << "Error with finding two previous events: INTERRUPT" << endl;
-		return NULL;
-	}
 	//TimeDiffBefore and EnergyDepBefore with definite previous event
-	for (i; i < GoodEvents.size(); i++){
-		GoodEvents[i]->TimeDiffBefore0 = GoodEvents[i]->Time - LastEventIn0->Time;
-		GoodEvents[i]->EnergyDepBefore0 = LastEventIn0->Adc;
-		GoodEvents[i]->TimeDiffBefore1 = GoodEvents[i]->Time - LastEventIn1->Time;
-		GoodEvents[i]->EnergyDepBefore1 = LastEventIn1->Adc;
-		if(GoodEvents[i]->Det == 0){
-			LastEventIn0 = GoodEvents[i];
+	for (ULong64_t i = 0; i < GoodEvents.size(); i++){
+		for (int det = 0; det < Ndet; det++) {
+			GoodEvents[i]->TimeDiffBefore[det] = GoodEvents[i]->Time - LastEventIn[det]->Time;
+			GoodEvents[i]->EnergyDepBefore[det] = LastEventIn[det]->Adc;
 		}
-		if(GoodEvents[i]->Det == 1){
-			LastEventIn1 = GoodEvents[i];		
-		}
+		LastEventIn[GoodEvents[i]->Det] = GoodEvents[i];
 	}
 	cout << "TimeDifferenceBefore and EnergyDepBefore calculated for every event" << endl;
 
+	// Dummy events for events which may not have a previous event
+	for (int det = 0; det < Ndet; det++) {
+		LastEventIn[det] = new Event;
+		LastEventIn[det]->Adc = 0;
+		LastEventIn[det]->Det = det;
+		LastEventIn[det]->Time = MaxTime;
+	}
+	
 	//Calculating TimeDiffAfter and EnergyDepAfter by iterating reversed through tree
-	LastEventIn0 = NULL;
-	LastEventIn1 = NULL;
-	i = GoodEvents.size()-1;
 	cout << "Start determining TimeDiffAfter and EnergyDepAfter" << endl;
 
-	do
-	{
-		if(LastEventIn0 != NULL) {
-			GoodEvents[i]->TimeDiffAfter0 = LastEventIn0->Time - GoodEvents[i]->Time;
-			GoodEvents[i]->EnergyDepAfter0 = LastEventIn0->Adc;
-			}
-		if(LastEventIn1 != NULL) {
-			GoodEvents[i]->TimeDiffAfter1 = LastEventIn1->Time - GoodEvents[i]->Time;
-			GoodEvents[i]->EnergyDepAfter1 = LastEventIn1->Adc;
-			}
-		if(GoodEvents[i]->Det == 0){
-			LastEventIn0 = GoodEvents[i];
+	//TimeDiffAfter and EnergyDepAfter with definite next event
+	for (int i = GoodEvents.size()-1; i >= 0; i--){
+		for (int det = 0; det < Ndet; det++) {
+			GoodEvents[i]->TimeDiffAfter[det] = LastEventIn[det]->Time - GoodEvents[i]->Time;
+			GoodEvents[i]->EnergyDepAfter[det] = LastEventIn[det]->Adc;
 		}
-		if(GoodEvents[i]->Det == 1){
-			LastEventIn1 = GoodEvents[i];
-		}
-		i--;
-	} while (i >= 0 && (LastEventIn0==NULL || LastEventIn1==NULL));
-	//Just a test of whether I did something wrong
-	if(LastEventIn0 != NULL && LastEventIn1 != NULL){
-		cout << "Two following events are found" << endl; 
-	}
-	else {
-		cout << "Error with finding two following events: INTERRUPT" << endl;
-		return NULL;
-	}
-	//TimeDiffBefore and EnergyDepBefore with definite previous event
-	for (i; i >= 0; i--){
-		GoodEvents[i]->TimeDiffAfter0 = LastEventIn0->Time - GoodEvents[i]->Time;
-		GoodEvents[i]->EnergyDepAfter0 = LastEventIn0->Adc;
-		GoodEvents[i]->TimeDiffAfter1 = LastEventIn1->Time - GoodEvents[i]->Time;
-		GoodEvents[i]->EnergyDepAfter1 = LastEventIn1->Adc;
-		if(GoodEvents[i]->Det == 0){
-			LastEventIn0 = GoodEvents[i];
-		}
-		if(GoodEvents[i]->Det == 1){
-			LastEventIn1 = GoodEvents[i];		
-		}
+		LastEventIn[GoodEvents[i]->Det] = GoodEvents[i];
 	}
 	cout << "TimeDiffAfter and EnergyDepAfter calculated for every event" << endl;
 
-	return GoodEvents;
+	return;
 }
-*/
+
 TFile* CreateNewFile(
 	vector<Event*> GoodEvents,
 	TString run = "run001"
@@ -274,7 +212,7 @@ void MakeTimeDiffTree(
 	//Do all functions implemented above
 	vector<Event*> GoodEvents = TreeEntries(oldTree);
 	
-	//GoodEvents = AddTimeDifferences(GoodEvents);
+	AddTimeDifferences(GoodEvents);
 	
 	TFile* NewFile = CreateNewFile(GoodEvents, "run001");
 	
