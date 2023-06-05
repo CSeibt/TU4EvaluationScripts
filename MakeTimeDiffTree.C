@@ -219,13 +219,10 @@ vector<Event*> AddTimeDifferences(
 */
 TFile* CreateNewFile(
 	vector<Event*> GoodEvents,
-	TString FileName,
-	TString Run,
-	TString PrefixPath = "Test_230526/" 
+	TString run = "run001"
 ){
 	//Create new root file with Tree DataNew
-	TString Folder = "/root/";
-	TString PathWithFile = PrefixPath + Run + Folder + FileName + ".root";
+	TString PathWithFile = "Data_" + run + "_coincidence.root";
 	
 	cout << "Start creation of new root file ..." << endl; 
 	TFile* File = new TFile(PathWithFile, "RECREATE");
@@ -279,8 +276,8 @@ void MakeTimeDiffTree(
 	
 	//GoodEvents = AddTimeDifferences(GoodEvents);
 	
-	//TFile* NewFile = CreateNewFile(GoodEvents, "Data_"+run+"_coincidence", "run001");
+	TFile* NewFile = CreateNewFile(GoodEvents, "run001");
 	
-	//NewFile->Write();
-	//cout << "New root file saved" << endl;
+	NewFile->Write();
+	cout << "New root file saved" << endl;
 }
