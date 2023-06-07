@@ -296,7 +296,7 @@ void MakeRawTree(
 
     vector<FILE*> fin = GetInputFiles(input);
     
-    TFile *rootFile = new TFile(input+run+".root","RECREATE");
+    TFile *rootFile = new TFile(run+".root","RECREATE");
 	cout << "created new file " << endl;
     TTree* prelimDataTree = MakePrelimDataTree(run, fin);
     rootFile->cd("/");

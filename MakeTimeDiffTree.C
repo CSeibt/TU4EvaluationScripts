@@ -173,7 +173,7 @@ TFile* CreateNewFile(
     DataNew->Branch("adc",    &CurrentEvent.Adc,   "ch/S");
     //DataNew->Branch("pileup",&CurrentEvent.Pileup,"pileup/O");
     //DataNew->Branch("saturation",&CurrentEvent.Saturation,"saturation/O");
-    DataNew->Branch("time",&CurrentEvent.Time,"time/l");
+    DataNew->Branch("Time",&CurrentEvent.Time,"Time/l");
     for (int det = 0; det < Ndet; det++) {
 		TString name = "TimeDiff_before" + to_string(det);
 		TString leaflist = name + "/L";
