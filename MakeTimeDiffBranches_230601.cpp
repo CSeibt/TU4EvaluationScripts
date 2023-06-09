@@ -31,15 +31,15 @@ using namespace std;
 #include "TStopwatch.h"
 #include "THStack.h"
 
-const MaxTime = ULLONG_MAX;
+const ULong64_t MaxTime = ULLONG_MAX;
 
 TFile* File(
     TString run = "run021",
-    TString prefixPath = "Test_230526/"
+    TString prefixPath = "../Test_230526/"
 ){
 	TString folder = "root/";//"";
 	TString list = "DataR_";
-    TString Suffix = ".bin";
+    TString Suffix = ".bin_without_timediff";
     
     // Variable definitions.
     TString listModeSuffix = list+run+Suffix;
@@ -75,10 +75,10 @@ vector<Event*> TreeEntries(
 ){
 	vector<Event*> TreeEvents = {};
 	TTree* Tree = dynamic_cast<TTree*>(File->Get("Data"));
-	if (!tree) {
+	if (!Tree) {
 		cout << "Error: Failed to retrieve the TTree from the input file." << endl;
 		File->Close();
-		return;
+		return TreeEvents;
 	}
 
 	//Get Values from existing Branches
@@ -101,7 +101,7 @@ vector<Event*> TreeEntries(
 	cout << "Start building of event vector ..." << endl;
 	for (ULong64_t i = 0; i < EntryNumber; i++) {
 		Tree->GetEntry(i);
-		if (!pileup && !saturation),{
+		if (!pileup && !saturation){
 			Event* CurrentEvent = new Event;
 			CurrentEvent->Adc = adc;
 			CurrentEvent->Det = det;
@@ -110,7 +110,7 @@ vector<Event*> TreeEntries(
 			CurrentEvent->Saturation = saturation;
 			TreeEvents.push_back(CurrentEvent);
 		}
-		if (i = k*PercentEntries){
+		if (i == k*PercentEntries){
 			cout << k << "% of total events finished" << endl;
 			k++;
 		}
@@ -161,7 +161,7 @@ vector<Event*> AddTimeDifferences(
 	}
 	else {
 		cout << "Error with finding two previous events: INTERRUPT" << endl;
-		return NULL;
+		return GoodEvents;
 	}
 	//TimeDiffBefore and EnergyDepBefore with definite previous event
 	for (i; i < GoodEvents.size(); i++){
@@ -181,46 +181,46 @@ vector<Event*> AddTimeDifferences(
 	//Calculating TimeDiffAfter and EnergyDepAfter by iterating reversed through tree
 	LastEventIn0 = NULL;
 	LastEventIn1 = NULL;
-	i = GoodEvents.size()-1;
+	i = GoodEvents.size();
 	cout << "Start determining TimeDiffAfter and EnergyDepAfter" << endl;
 
 	do
 	{
 		if(LastEventIn0 != NULL) {
-			GoodEvents[i]->TimeDiffAfter0 = LastEventIn0->Time - GoodEvents[i]->Time;
-			GoodEvents[i]->EnergyDepAfter0 = LastEventIn0->Adc;
+			GoodEvents[i-1]->TimeDiffAfter0 = LastEventIn0->Time - GoodEvents[i-1]->Time;
+			GoodEvents[i-1]->EnergyDepAfter0 = LastEventIn0->Adc;
 			}
 		if(LastEventIn1 != NULL) {
-			GoodEvents[i]->TimeDiffAfter1 = LastEventIn1->Time - GoodEvents[i]->Time;
-			GoodEvents[i]->EnergyDepAfter1 = LastEventIn1->Adc;
+			GoodEvents[i-1]->TimeDiffAfter1 = LastEventIn1->Time - GoodEvents[i-1]->Time;
+			GoodEvents[i-1]->EnergyDepAfter1 = LastEventIn1->Adc;
 			}
-		if(GoodEvents[i]->Det == 0){
+		if(GoodEvents[i-1]->Det == 0){
 			LastEventIn0 = GoodEvents[i];
 		}
-		if(GoodEvents[i]->Det == 1){
+		if(GoodEvents[i-1]->Det == 1){
 			LastEventIn1 = GoodEvents[i];
 		}
 		i--;
-	} while (i >= 0 && (LastEventIn0==NULL || LastEventIn1==NULL));
+	} while (i >= 1 && (LastEventIn0==NULL || LastEventIn1==NULL));
 	//Just a test of whether I did something wrong
 	if(LastEventIn0 != NULL && LastEventIn1 != NULL){
 		cout << "Two following events are found" << endl; 
 	}
 	else {
 		cout << "Error with finding two following events: INTERRUPT" << endl;
-		return NULL;
+		return GoodEvents;
 	}
 	//TimeDiffBefore and EnergyDepBefore with definite previous event
-	for (i; i >= 0; i--){
-		GoodEvents[i]->TimeDiffAfter0 = LastEventIn0->Time - GoodEvents[i]->Time;
-		GoodEvents[i]->EnergyDepAfter0 = LastEventIn0->Adc;
-		GoodEvents[i]->TimeDiffAfter1 = LastEventIn1->Time - GoodEvents[i]->Time;
-		GoodEvents[i]->EnergyDepAfter1 = LastEventIn1->Adc;
-		if(GoodEvents[i]->Det == 0){
-			LastEventIn0 = GoodEvents[i];
+	for (i; i >= 1; i--){
+		GoodEvents[i-1]->TimeDiffAfter0 = LastEventIn0->Time - GoodEvents[i-1]->Time;
+		GoodEvents[i-1]->EnergyDepAfter0 = LastEventIn0->Adc;
+		GoodEvents[i-1]->TimeDiffAfter1 = LastEventIn1->Time - GoodEvents[i-1]->Time;
+		GoodEvents[i-1]->EnergyDepAfter1 = LastEventIn1->Adc;
+		if(GoodEvents[i-1]->Det == 0){
+			LastEventIn0 = GoodEvents[i-1];
 		}
-		if(GoodEvents[i]->Det == 1){
-			LastEventIn1 = GoodEvents[i];		
+		if(GoodEvents[i-1]->Det == 1){
+			LastEventIn1 = GoodEvents[i-1];		
 		}
 	}
 	cout << "TimeDiffAfter and EnergyDepAfter calculated for every event" << endl;
@@ -232,7 +232,7 @@ TFile* CreateNewFile(
 	vector<Event*> GoodEvents,
 	TString FileName,
 	TString Run,
-	TString PrefixPath = "Test_230526/" 
+	TString PrefixPath = "../Test_230526/" 
 ){
 	//Create new root file with Tree DataNew
 	TString Folder = "/root/";
@@ -273,17 +273,17 @@ TFile* CreateNewFile(
 }
 
 
-void MakeTimeDIffBranches_230601(){
-	TString Run = "run001";
+void MakeTimeDiffBranches_230601(){
+	TString Run = "run002";
 
-	TFile* OldFile = File("run");
+	TFile* OldFile = File(Run);
 
 	//Do all functions implemented above
 	vector<Event*> GoodEvents = TreeEntries(OldFile);
 	
 	GoodEvents = AddTimeDifferences(GoodEvents);
 	
-	TFile* NewFile = CreateNewFile(GoodEvents, "Data_"+Run+"_coincidence", "run001");
+	TFile* NewFile = CreateNewFile(GoodEvents, "Data_"+Run+"_coincidence", Run);
 	
 	NewFile->Write();
 	cout << "New root file saved" << endl;
