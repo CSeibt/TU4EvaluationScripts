@@ -46,7 +46,7 @@ The 'DrawHist'-function acting as a main function. Here you can create the strin
 //Open the root File of interest
 TFile* File(
     TString run = "run021",
-    TString prefixPath = "TU5/Paper/"
+    TString prefixPath = "../"
 ){
 	TString folder = "root/";//"";
 	TString list = "DataR_";
@@ -55,7 +55,6 @@ TFile* File(
     // Variable definitions.
     TString listModeSuffix = list+run+Suffix;
     TString prefix = prefixPath + run + "/" + folder;
-    TString input = prefix;
 
     
     // Open ROOT file

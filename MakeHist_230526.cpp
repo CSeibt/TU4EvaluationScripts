@@ -30,7 +30,7 @@ using namespace std;
 #include "TStopwatch.h"
 #include "THStack.h"
 
-
+typedef vector<Int_t> EThr; 
 
 //Open the root file containing the respective histograms
 TFile* GetInputFile(
@@ -90,6 +90,38 @@ TString OptString(
 	}
 	return parameters;
 }
+
+
+TString CoincidenceOptString(
+	Int_t Det,															//Main Detector of interest
+	Int_t Det2,															//Coincidence detector
+	Int_t TimeDiffThr,												//Time Difference threshold. For TU4-TU5-coincidence approx 5000 ns
+	vector<EThr> EnergyThresholds								//Vector of 2d arrays according for the energy window the coincidence event must have
+){
+	TString Parameters = Form("det==%i && pileup==0 %% saturation==0", Det);
+	Parameters = Parameters + Form(" && ((TimeDiff_before%i<%i && (", Det2, TimeDiffThr);
+	for (int i = 0; i < EnergyThresholds.size(); i++){
+		if (i == 0){
+			Parameters = Parameters + Form("(EnergyDep_before%i>%i && EnergyDep_before%i<%i)", Det2, EnergyThresholds[i][0], Det2, EnergyThresholds[i][1]);
+		}
+		else {
+			Parameters = Parameters + Form(" || (EnergyDep_before%i>%i && EnergyDep_before%i<%i)", Det2, EnergyThresholds[i][0], Det2, EnergyThresholds[i][1]);
+		}
+	}
+	Parameters = Parameters + Form(")) || (TimeDiff_after%i<%i && (", Det2, TimeDiffThr);
+	for (int i = 0; i < EnergyThresholds.size(); i++){
+		if (i == 0){
+			Parameters = Parameters + Form("(EnergyDep_after%i>%i && EnergyDep_after%i<%i)", Det2, EnergyThresholds[i][0], Det2, EnergyThresholds[i][1]);
+		}
+		else {
+			Parameters = Parameters + Form(" || (EnergyDep_after%i>%i && EnergyDep_after%i<%i)", Det2, EnergyThresholds[i][0], Det2, EnergyThresholds[i][1]);
+		}
+	}
+	Parameters = Parameters + ")))";
+	cout << Parameters << endl;
+	return Parameters;
+}
+
 
 void GetAxisBorderAndSteps(Double_t xmax, Double_t &tborder, Int_t &tsteps)
 {   // Determine axis upper limit and bin number from given maximum entry
@@ -151,7 +183,8 @@ TH1D* HistCanvas(
 	TString histtype,
 	TString attributes,
 	Int_t det0 = 0,
-	Int_t det1 = 1
+	Int_t det1 = 1,
+	bool Write = false
 ){
 // Create a histogram of given options and draw it into a canvas.
 	TCanvas* c1 = new TCanvas(histname, histname, 100, 10, 1200, 700);
@@ -159,7 +192,7 @@ TH1D* HistCanvas(
 	TH1D* histogram = Histogram(data, histtype, histname, attributes, det0, det1);
 	histogram->SetStats(0);
 	histogram->Draw();
-	
+	if (Write) histogram->Write();
 	return histogram;
 }
 
@@ -173,8 +206,8 @@ void MakeHist_230526(){
     TString run = "run002";			//run
     Int_t TU5 = 0;					//TU5 (X-ray detector)
     Int_t TU4 = 1;					//TU4 (Ge detector)
-    Double_t thrTimediff = 1.E4;	//time difference threshold
-    Double_t thrEnergy = 1;			//energy threshold (pile-up)
+    Int_t thrTimediff = 5.0E6;	//time difference threshold
+    Int_t thrEnergy = 1;			//energy threshold (pile-up)
     Int_t nch = 16384;
     
     
@@ -193,17 +226,28 @@ void MakeHist_230526(){
 	 
 
 	
-	TH1D* histogram_adc1 = HistCanvas(data, "TU5adc", "adc", options1, TU5);
-	TH1D* histogram_time1 = HistCanvas(data, "histo_rate_TU5", "time", options1, TU5);
+	TH1D* histogram_adc1 = HistCanvas(data, "TU5adc", "adc", options1, TU5, TU4, true);
+	TH1D* histogram_time1 = HistCanvas(data, "histo_rate_TU5", "time", options1, TU5, TU4, true);
 	
-	TH1D* histogram_adc2 = HistCanvas(data, "TU4adc", "adc", options2, TU4);
-	TH1D* histogram_time2 = HistCanvas(data, "histo_rate_TU4", "time", options2, TU4);
+	TH1D* histogram_adc2 = HistCanvas(data, "TU4adc", "adc", options2, TU4, TU5, true);
+	TH1D* histogram_time2 = HistCanvas(data, "histo_rate_TU4", "time", options2, TU4, TU5, true);
 	
-	TH1D* TimeDiff01 = HistCanvas(data, "TU5TU4TimeDiff", "TimeDiff", options1, TU5, TU4);
-	TH1D* TimeDiff02 = HistCanvas(data, "TU4TU5TimeDiff", "TimeDiff", options2, TU4, TU5);
+	TH1D* TimeDiff01 = HistCanvas(data, "TU5TU4TimeDiff", "TimeDiff", options1, TU5, TU4, true);
+	TH1D* TimeDiff02 = HistCanvas(data, "TU4TU5TimeDiff", "TimeDiff", options2, TU4, TU5, true);
 	
 	
-	TH1D* CoincidenceTU5 = HistCanvas(data, "TU5adcCoincidence", "adc", TU5CoinOptions, TU5, TU4);
-	TH1D* CoincidenceTU4 = HistCanvas(data, "TU4adcCoincidence", "adc", TU4CoinOptions, TU4, TU5);
+	TH1D* CoincidenceTU5 = HistCanvas(data, "TU5adcCoincidence", "adc", TU5CoinOptions, TU5, TU4, true);
+	TH1D* CoincidenceTU4 = HistCanvas(data, "TU4adcCoincidence", "adc", TU4CoinOptions, TU4, TU5, true);
+	
+	
+	EThr Xrays1 = {417, 597};
+	EThr Xrays2 = {2700, 3173};
+	EThr Xrays3 = {3489, 3667};
+	
+	vector<EThr> Ba133Xrays = {Xrays1};
+	
+	//TString XrayCoinOptions = CoincidenceOptString(TU4, TU5, thrTimediff, Ba133Xrays);
+	//TH1D* XrayCoincidenceTU4 = HistCanvas(data, "TU4_BaXrayCoincidence", "adc", XrayCoinOptions, TU4, TU5);
+	//XrayCoincidenceTU4->Write();
 	
 }
