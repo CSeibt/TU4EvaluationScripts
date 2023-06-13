@@ -181,18 +181,29 @@ void MakeHist_230526(){
 	TTree* data = (TTree*)file->Get("Data");							//Get data from file
 	
 	vector<bool> attributes = {false, false, false, false, false};
-    
+
 	
 	TString options1 = OptString(0, attributes);
 	TString options2 = OptString(1, attributes);
 
-	
+
 	TH1D* histogram_adc1 = HistCanvas(data, "TU5adc", "adc", options1);
-	TH1D* histogram_time1 = HistCanvas(data, "histo_rate_TU5", "Time", options1);
+	//TH1D* histogram_time1 = HistCanvas(data, "histo_rate_TU5", "Time", options1);
 	
 	TH1D* histogram_adc2 = HistCanvas(data, "TU4adc", "adc", options2);
-	TH1D* histogram_time2 = HistCanvas(data, "histo_rate_TU4", "Time", options2);
+	//TH1D* histogram_time2 = HistCanvas(data, "histo_rate_TU4", "Time", options2);
 	
-	TH1D* TimeDiff01 = HistCanvas(data, "TU5TU4TimeDiff", "TimeDiff", options1, TU5, TU4);
-	TH1D* TimeDiff02 = HistCanvas(data, "TU4TU5TimeDiff", "TimeDiff", options2, TU4, TU5);
+	//TH1D* TimeDiff11 = HistCanvas(data, "TU5TU5TimeDiff", "TimeDiff", options1, TU5, TU5);
+	//TH1D* TimeDiff22 = HistCanvas(data, "TU4TU4TimeDiff", "TimeDiff", options2, TU4, TU4);
+	//TH1D* TimeDiff12 = HistCanvas(data, "TU5TU4TimeDiff", "TimeDiff", options1, TU5, TU4);
+	//TH1D* TimeDiff21 = HistCanvas(data, "TU4TU5TimeDiff", "TimeDiff", options2, TU4, TU5);
+
+    // Checks with manual selection string
+    TString man_sel = "";
+    // TU5 spectrum of coincident events 
+    man_sel = "det==0 && (TimeDiff_after1<0.5E6 || TimeDiff_before1<4.E6)";
+    TH1D* coincident_adc1 = HistCanvas(data, "CoincTU5adc", "adc", man_sel, TU5, 0);
+    // TU4 spectrum of coincident events 
+    man_sel = "det==1 && (TimeDiff_after0<4.E6 || TimeDiff_before0<0.5E6)";
+    TH1D* coincident_adc2 = HistCanvas(data, "CoincTU4adc", "adc", man_sel, TU4, 0);
 }
