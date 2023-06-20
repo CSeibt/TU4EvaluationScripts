@@ -204,7 +204,7 @@ TFile* CreateNewFile(
 
 
 void MakeTimeDiffTree(	
-	TString run = "run001"
+	TString run = "run002"
 
 ){
 	TTree* oldTree = GetSortedTree(run);
@@ -214,7 +214,7 @@ void MakeTimeDiffTree(
 	
 	AddTimeDifferences(GoodEvents);
 	
-	TFile* NewFile = CreateNewFile(GoodEvents, "run001");
+	TFile* NewFile = CreateNewFile(GoodEvents, run);
 	
 	NewFile->Write();
 	cout << "New root file saved" << endl;

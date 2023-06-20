@@ -1,7 +1,7 @@
 
 #include <dirent.h>
 
-#define nentriesMAX 20000000
+#define nentriesMAX 200000000
 
 vector<FILE*> GetInputFiles(TString input)
 {
@@ -285,9 +285,9 @@ TTree* MakePrelimDataTree(TString run, vector<FILE*> fin)
 }
 
 void MakeRawTree(
-    TString run = "run001",
-    //TString folder = "/ZIH.fast/users/felsdaq/TUBunker/TU5/TU5_TU4_230524_coincidence/DAQ/",  //Path of the .bin file which shall be evaluated
-    TString folder = "/home/hans/Uni/EC/TU5_TU4_coincidence/DAQ/"  //Path of the .bin file which shall be evaluated
+    TString run = "run002",
+    TString folder = "/ZIH.fast/users/felsdaq/TUBunker/TU5/TU5_TU4_230524_coincidence/DAQ/"  //Path of the .bin file which shall be evaluated
+    //TString folder = "/home/hans/Uni/EC/TU5_TU4_coincidence/DAQ/"  //Path of the .bin file which shall be evaluated
 )
 {
 	TString suffix = "/RAW/";
