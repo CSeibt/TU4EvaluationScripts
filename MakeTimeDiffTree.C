@@ -56,9 +56,9 @@ struct Event {
 	//Bool_t Pileup;
 	//Bool_t Saturation;
 	Long64_t TimeDiffBefore[Ndet];
-	Short_t EnergyDepBefore[Ndet];
+	Long64_t EnergyDepBefore[Ndet];
 	Long64_t TimeDiffAfter[Ndet];
-	Short_t EnergyDepAfter[Ndet];
+	Long64_t EnergyDepAfter[Ndet];
 };
 
 vector<Event*> TreeEntries(
@@ -111,43 +111,62 @@ void AddTimeDifferences(
 	vector<Event*> GoodEvents
 ){
 	//Variable initilization
+	//Short_t LastAdc[Ndet];
+	//ULong64_t LastTime[Ndet];
 	Event* LastEventIn[Ndet];
+	
+	int firstevent = 0;
+	int lastevent = GoodEvents.size() - 1;
 	
 	// Dummy events for events which may not have a previous event
 	for (int det = 0; det < Ndet; det++) {
+		//LastAdc[det] = 0;
+		//LastTime[det] = 0;
 		LastEventIn[det] = new Event;
 		LastEventIn[det]->Adc = 0;
 		LastEventIn[det]->Det = det;
-		LastEventIn[det]->Time = 0;
+		LastEventIn[det]->Time = GoodEvents[firstevent]->Time;
 	}
 
 	//TimeDiffBefore and EnergyDepBefore with definite previous event
-	for (ULong64_t i = 0; i < GoodEvents.size(); i++){
+	for (ULong64_t i = firstevent; i <= lastevent; i++){
 		for (int det = 0; det < Ndet; det++) {
+			//GoodEvents[i]->TimeDiffAfter[det] = GoodEvents[i]->Time - LastTime[det];
+			//GoodEvents[i]->EnergyDepAfter[det] = LastAdc[det];
 			GoodEvents[i]->TimeDiffBefore[det] = GoodEvents[i]->Time - LastEventIn[det]->Time;
-			GoodEvents[i]->EnergyDepBefore[det] = LastEventIn[det]->Adc;
+			GoodEvents[i]->EnergyDepBefore[det] = (Long64_t)LastEventIn[det]->Adc;
 		}
+		//cout << "event " << i << " det" << GoodEvents[i]->Det << " Adc " << GoodEvents[i]->Adc << " EnergyDepBefore[0] " << GoodEvents[i]->EnergyDepBefore[0] << " EnergyDepBefore[1] " << GoodEvents[i]->EnergyDepBefore[1] << endl;
+		//LastTime[GoodEvents[i]->Det] = GoodEvents[i]->Time;
+		//LastAdc[GoodEvents[i]->Det] = GoodEvents[i]->Adc;
 		LastEventIn[GoodEvents[i]->Det] = GoodEvents[i];
 	}
 	cout << "TimeDifferenceBefore and EnergyDepBefore calculated for every event" << endl;
 
 	// Dummy events for events which may not have a previous event
 	for (int det = 0; det < Ndet; det++) {
+		//LastAdc[det] = 0;
+		//LastTime[det] = MaxTime;
 		LastEventIn[det] = new Event;
 		LastEventIn[det]->Adc = 0;
 		LastEventIn[det]->Det = det;
-		LastEventIn[det]->Time = MaxTime;
+		LastEventIn[det]->Time = GoodEvents[lastevent]->Time;
 	}
 	
 	//Calculating TimeDiffAfter and EnergyDepAfter by iterating reversed through tree
 	cout << "Start determining TimeDiffAfter and EnergyDepAfter" << endl;
 
 	//TimeDiffAfter and EnergyDepAfter with definite next event
-	for (int i = GoodEvents.size()-1; i >= 0; i--){
+	for (int i = lastevent; i >= firstevent; i--){
 		for (int det = 0; det < Ndet; det++) {
+			//GoodEvents[i]->TimeDiffAfter[det] = LastTime[det] - GoodEvents[i]->Time;
+			//GoodEvents[i]->EnergyDepAfter[det] = LastAdc[det];
 			GoodEvents[i]->TimeDiffAfter[det] = LastEventIn[det]->Time - GoodEvents[i]->Time;
-			GoodEvents[i]->EnergyDepAfter[det] = LastEventIn[det]->Adc;
+			GoodEvents[i]->EnergyDepAfter[det] = (Long64_t)LastEventIn[det]->Adc;
 		}
+		//cout << "event " << i << " det" << GoodEvents[i]->Det << " Adc " << GoodEvents[i]->Adc << " EnergyDepAfter[0] " << GoodEvents[i]->EnergyDepAfter[0] << " EnergyDepAfter[1] " << GoodEvents[i]->EnergyDepAfter[1] << endl;
+		//LastTime[GoodEvents[i]->Det] = GoodEvents[i]->Time;
+		//LastAdc[GoodEvents[i]->Det] = GoodEvents[i]->Adc;
 		LastEventIn[GoodEvents[i]->Det] = GoodEvents[i];
 	}
 	cout << "TimeDiffAfter and EnergyDepAfter calculated for every event" << endl;
@@ -194,6 +213,7 @@ TFile* CreateNewFile(
 	cout << "Start writing events into the new tree ..." << endl;
 	for (ULong64_t i = 0; i < GoodEvents.size(); i++){
 		CurrentEvent = *GoodEvents[i];
+		//cout << i << " " << CurrentEvent.Adc << " " << CurrentEvent.EnergyDepBefore[0] << " " << CurrentEvent.EnergyDepBefore[1] << endl;
 		DataNew->Fill();
 	}
 

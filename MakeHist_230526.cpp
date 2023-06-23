@@ -162,6 +162,55 @@ TH1D* HistCanvas(
 	return histogram;
 }
 
+// TODO: TH1D* GetSpectrumCoincidentWithEnergy(TTree* data, Int_t det0, Int_t det1, Double_t minTimeDiff, Double_t maxTimeDiff, Double_t range0low, Double_t range0up, range1low=0, Double_t range1up=0, range2low=0, Double_t range2up=0) {
+// Loop through the tree.
+
+TH2D* GetCoincidentEvsE(TTree* data, Int_t det0, Int_t det1, Double_t minTimeDiff, Double_t maxTimeDiff)
+// Make a 2D histogram of all det0 events considered coincident with an event in det1. det0 adc channel on x-axis, det1 adc channel on y-axis. 
+// Coincidence time interval: minTimeDiff < t(det0)-t(det1) < maxTimeDiff. 
+{
+	// create histogram
+	Int_t Nch = 16000;
+	TString histname = "name";
+	TH2D* h = new TH2D(histname.Data(), "; TU4 channel; TU5 channel", 2000, 0, 2000, 10000, 0, 10000);
+	
+	UShort_t det = 0;
+	Short_t adc = 0;
+	Long64_t TimeDiffBefore = 0;
+	Long64_t TimeDiffAfter = 0;
+	Long64_t EnergyDepBefore = 0;
+	Long64_t EnergyDepAfter = 0;
+	data->SetBranchAddress("det", &det);
+	data->SetBranchAddress("adc", &adc);
+	data->SetBranchAddress(Form("TimeDiff_before%i", det1), &TimeDiffBefore);
+	data->SetBranchAddress(Form("TimeDiff_after%i", det1), &TimeDiffAfter);
+	data->SetBranchAddress(Form("EnergyDep_before%i", det1), &EnergyDepBefore);
+	data->SetBranchAddress(Form("EnergyDep_after%i", det1), &EnergyDepAfter);
+	
+	// fill histogram
+	for (Long64_t event = 0; event < data->GetEntries(); event++) {
+		data->GetEvent(event);
+		if (det != det0) continue;
+		if (-TimeDiffAfter > minTimeDiff) {
+			h->Fill(adc, EnergyDepAfter); 
+			//cout << "det" << det1 << " ch " << EnergyDepAfter << " after det" << det0 << " ch " << adc << endl;
+		}
+		if (TimeDiffBefore < maxTimeDiff) {
+			h->Fill(adc, EnergyDepBefore); 
+			//cout << "det" << det1 << " ch " << EnergyDepAfter << " before det" << det0 << " ch " << adc << endl;
+		}
+		//cout << "det " << det << " adc " << adc << " dtBefore " << TimeDiffBefore << " dtAfter " << TimeDiffAfter << endl;
+		if (-TimeDiffAfter > minTimeDiff && TimeDiffBefore < maxTimeDiff) cout << "Event " << event << " counted twice!" << endl;
+	}
+	//TString varexp = "EnergyDep_after" + to_string(det1) + ":adc";
+	//TString selection = "det==" + to_string(det0) + "&&TimeDiff_after"+to_string(det1) + "<" + to_string(maxTimeDiff);
+	//data->Draw(varexp.Data(), selection.Data());
+	
+	cout << h->Integral() << " histogram entries" << endl;
+	
+	return h;
+}
+
 void MakeHist_230526(){
 	//General cosmetics
 	gStyle->SetOptStat(1001111);
@@ -169,7 +218,7 @@ void MakeHist_230526(){
     gStyle->SetStripDecimals(kFALSE);
 
     //Variables
-    TString run = "run002";			//run
+    TString run = "run001";			//run
     Int_t TU5 = 0;					//TU5 (X-ray detector)
     Int_t TU4 = 1;					//TU4 (Ge detector)
     Double_t thrTimediff = 1.E4;	//time difference threshold
@@ -194,31 +243,31 @@ void MakeHist_230526(){
 	//TH1D* histogram_time2 = HistCanvas(data, "histo_rate_TU4", "Time", options2);
 	
 	/*/ Time difference spectra
-	TH1D* TimeDiff11 = Histogram(data, "TU5TU5TimeDiff", "TimeDiff", options1, TU5, TU5);
-	TH1D* TimeDiff22 = Histogram(data, "TU4TU4TimeDiff", "TimeDiff", options2, TU4, TU4);
-	TH1D* TimeDiff12 = Histogram(data, "TU5TU4TimeDiff", "TimeDiff", options1, TU5, TU4);
-	TH1D* TimeDiff21 = Histogram(data, "TU4TU5TimeDiff", "TimeDiff", options2, TU4, TU5);
-	TCanvas* cTimeDiff = new TCanvas("TimeDiff", "TimeDiff");
+	TH1D* TimeDiff11 = HistCanvas(data, "TU5TU5TimeDiff", "TimeDiff", options1, TU5, TU5);
+	TH1D* TimeDiff22 = HistCanvas(data, "TU4TU4TimeDiff", "TimeDiff", options2, TU4, TU4);
+	TH1D* TimeDiff12 = HistCanvas(data, "TU5TU4TimeDiff", "TimeDiff", options1, TU5, TU4); // t(TU5)-t(TU4), all TU5 events filled twice
+	TH1D* TimeDiff21 = HistCanvas(data, "TU4TU5TimeDiff", "TimeDiff", options2, TU4, TU5);
+	/*TCanvas* cTimeDiff = new TCanvas("TimeDiff", "TimeDiff");
 	cTimeDiff->Divide(2,2);
 	cTimeDiff->cd(1);
-	gPad->SetLogy();
+	//cTimeDiff->cd(1)->SetLogy();
 	TimeDiff11->SetStats(0);
 	TimeDiff11->Draw();
 	cTimeDiff->cd(2);
-	gPad->SetLogy();
+	//cTimeDiff->cd(2)->SetLogy();
 	TimeDiff12->SetStats(0);
 	TimeDiff12->Draw();
 	cTimeDiff->cd(3);
-	gPad->SetLogy();
+	//cTimeDiff->cd(3)->SetLogy();
 	TimeDiff21->SetStats(0);
 	TimeDiff21->Draw();
 	cTimeDiff->cd(4);
-	gPad->SetLogy();
+	//cTimeDiff->cd(4)->SetLogy();
 	TimeDiff22->SetStats(0);
 	TimeDiff22->Draw();
 	//*/
 
-    // Checks with manual selection string
+    /*/ Checks with manual selection string
     TString man_sel = "";
     // TU5 spectrum of coincident events 
     man_sel = "det==0 && (TimeDiff_after1<0.5E6 || TimeDiff_before1<4.E6)";
@@ -226,6 +275,7 @@ void MakeHist_230526(){
     // TU4 spectrum of coincident events 
     man_sel = "det==1 && ((TimeDiff_after0<4.E6 && (EnergyDep_after0>2700 && EnergyDep_after0<3173)) || (TimeDiff_before0<0.5E6 && (EnergyDep_before0>2700 && EnergyDep_before0<3173)))"; // 2700-3173 & 3489-3667
     TH1D* coincident_adc2 = HistCanvas(data, "CoincTU4adc", "adc", man_sel, TU4, 0);
+    //*/
     
     /*/ Draw coincident spectra together with raw ones
     TCanvas* cAdc1 = new TCanvas("TU5adc", "TU5adc");
@@ -249,4 +299,9 @@ void MakeHist_230526(){
     l2->AddEntry(histogram_adc2, "all events");
     l2->AddEntry(coincident_adc2, "coincident events");
     l2->Draw();//*/
+    
+    TH2D* hEvsE = GetCoincidentEvsE(data, TU4, TU5, -4.0E6, 0.5E6);
+    TCanvas* cEvsE = new TCanvas("EvsE");
+    hEvsE->SetStats(0);
+    hEvsE->Draw("colz");
 }
