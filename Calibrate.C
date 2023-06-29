@@ -16,6 +16,11 @@ void PrintROIs()
     }
 }
 
+void ClearROIs()
+{
+    nROI = 0;
+}
+
 void AddROI(Double_t physE, Double_t E0, Double_t E1, Double_t E2, Double_t E3)
 { // Add a peak region of interest. All peak-evaluating functions will use it.
   // (E0, E1) left background interval
@@ -72,16 +77,16 @@ TF1* FitPeak(TH1D* spectrum, Double_t guess_p1, Double_t E, Double_t E0, Double_
     //fit_fcn->Draw("same");
 
     // Fit
-    spectrum->Fit("fit_fcn", "LRQ");
+    spectrum->Fit("fit_fcn", "0LRQ");
 
     // draw fit
-    //string drawname = "fit_" + to_string(E);
-    //new TCanvas();
-    //gPad->SetLogy(0);
-    //TH1D* hdraw = (TH1D*)spectrum->Clone(drawname.c_str());
-    //hdraw->SetStats(0);
-    //hdraw->Draw("hist");
-    //fit_fcn->Draw("same");
+    string drawname = "fit_" + to_string(E);
+    new TCanvas();
+    gPad->SetLogy(0);
+    TH1D* hdraw = (TH1D*)spectrum->Clone(drawname.c_str());
+    hdraw->SetStats(0);
+    hdraw->Draw("hist");
+    fit_fcn->Draw("same");
 
     // output fit results
     if (V) cout << "Peak position = " 
@@ -158,7 +163,8 @@ TF1* Calibration(TH1D* hCh, Double_t guess_p1, string calib_name, TH1D* cal_hist
 
     // Open the peaks' properties as graph
     TGraphErrors* gCal = new TGraphErrors(calib_data_filename.c_str(), "%lg %lg %*lg %lg %lg");
-    gCal->SetTitle("Calibration; channel; E / keV");
+    string graphtitle = calib_name + " calibration; channel; E / keV";
+    gCal->SetTitle(graphtitle.c_str());
 
     // Do the calibration fit
     TF1* fCal = new TF1("fCal", "pol1", 0, 16000);
@@ -193,6 +199,8 @@ TF1* Calibration(TH1D* hCh, Double_t guess_p1, string calib_name, TH1D* cal_hist
         (*output) << fCal->GetParameter(0) << "\t" << fCal->GetParError(0) << "\t"
                   << fCal->GetParameter(1) << "\t" << fCal->GetParError(1) << "\t"
                   << width_string_builder.str() << endl;
+    } else {
+        cout << calib_name << ": E/keV = " << fCal->GetParameter(1) << " * ch + " << fCal->GetParameter(0) << endl;
     }
 
     if (cal_hist) {
@@ -202,31 +210,68 @@ TF1* Calibration(TH1D* hCh, Double_t guess_p1, string calib_name, TH1D* cal_hist
     return fCal;
 }
 
-void Calibrate(
-//    string filename = "/home/hans/Uni/EC/TU5_TU4_coincidence/TU4EvaluationScripts/run002.root"
-    string filename = "run001.root"
-)
+void CalibrateTU5_133Ba(TH1D* hCh)
+// Do calibration for the TU5 Detector. 
+// Includes all hard-coded preferences: ROIs, guessed calibration factor
 {
+    ClearROIs();
     AddROI(4.47, 3.5, 4.0, 4.5, 4.5);
     //AddROI(37.255, 36.8, 36.8, 38.3, 40);
     AddROI(80.9979, 60, 80, 82, 100);
     PrintROIs();
 
     // guess calibration
-    g_guess_p1 = 0.0099;
+    Double_t guess_p1 = 0.0099;
 
+    Calibration(hCh, guess_p1, "TU5");
+}
+
+void CalibrateTU4_133Ba(TH1D* hCh)
+// Do calibration for the TU5 Detector. 
+// Includes all hard-coded preferences: ROIs, guessed calibration factor, detector name
+{
+    ClearROIs();
+    AddROI(80.9979, 70, 70, 90, 90);
+    AddROI(276.3989, 260, 260, 290, 290);
+    AddROI(302.8508, 290, 290, 320, 320);
+    AddROI(356.0129, 340, 340, 370, 370);
+    PrintROIs();
+
+    // guess calibration
+    Double_t guess_p1 = 0.33;
+
+    Calibration(hCh, guess_p1, "TU4");
+}
+
+void Calibrate(
+//    string filename = "/home/hans/Uni/EC/TU5_TU4_coincidence/TU4EvaluationScripts/run002.root"
+    string filename = "run001.root"
+)
+{
     // Open root file
     TFile* file = TFile::Open(filename.c_str(), "READ");
     if (!file) cout << "Could not open " << filename << endl;
     // Get data tree
     TTree* data = (TTree*)file->Get("Data");
-    // Get uncalibrated adc histogram
+
+    // TU5 calibration
+    // Get uncalibrated adc histograms
     Int_t Nch = 16000;
-    TString histname = "name";
-    TH1D* hCh = new TH1D(histname.Data(), "title", Nch, 0, Nch);
+    TString histname = "hChTU5";
+    TH1D* hChTU5 = new TH1D(histname.Data(), ";TU5 ADC channel; counts", Nch, 0, Nch);
     TString varexp = "adc>>"+histname;
     TString selection = "det==0 && pileup==0 && saturation==0";
-    data->Draw(varexp.Data(), selection.Data());
+    data->Draw(varexp.Data(), selection.Data(), "goff");
+    // calibration
+    CalibrateTU5_133Ba(hChTU5);
 
-    Calibration(hCh, g_guess_p1, "TU5");
+    // TU4 calibration
+    // Get uncalibrated adc histograms
+    histname = "hChTU4";
+    TH1D* hChTU4 = new TH1D(histname.Data(), ";TU4 ADC channel; counts", Nch, 0, Nch);
+    varexp = "adc>>"+histname;
+    selection = "det==1 && pileup==0 && saturation==0";
+    data->Draw(varexp.Data(), selection.Data(), "goff");
+    // calibration
+    CalibrateTU4_133Ba(hChTU4);
 }
