@@ -90,13 +90,12 @@ TString OptString(
 	return parameters;
 }
 
-void GetAxisBorderAndSteps(Double_t xmax, Double_t &tborder, Int_t &tsteps)
-{   // Determine axis upper limit and bin number from given maximum entry
-    Double_t dig = pow(10, (int)(log(xmax)/log(10)));					//determine magnitude of tmax (10^x)
-    tborder = dig * (1+(int)(xmax/dig));						//determine histogram border (tborder=a*10^x)
-    tsteps = int(tborder);										//Set bin number = tborder -> 1 bin = 1 s
-    // If bin number is over 20000, bin number gets reduced to 2000 < bin number <= 20000 (1 bin = 1, 10,... s)
-    while(tsteps > 20000){tsteps = tsteps/10;}
+Double_t GetAxisBorder(TTree* data, TString columname)
+{   // Determine axis upper limit from maximum tree entry
+	Double_t xmax = data->GetMaximum(columname.Data());
+    Double_t dig = pow(10, (int)(log(xmax)/log(10)));	// determine magnitude of xmax (10^x)
+    Double_t tborder = dig * (1+(int)(xmax/dig));		// determine histogram border (tborder=a*10^x)
+	return tborder;
 }
 
 TH1D* Histogram(
@@ -107,35 +106,46 @@ TH1D* Histogram(
 	Int_t det = 0,														//det and det2 only necessary if histtype = TimeDiff
 	Int_t det2 = 1
 ){
-// Create a histogram of one of the types {"adc", "Time", "TimeDiff"}
+// Create a histogram of one of the types {"adc", "Edep", "Time", "TimeDiff"}
 	vector<TString> detectors = {"TU5","TU4"};    				//Detector names
-	
-	Double_t nch = 16384;
-	
-	if (histtype=="adc"){
-		TH1D* histo = new TH1D(histname, detectors[det]+" ADC spectrum; Channel; Counts", nch, 0, nch);
-		data->Draw("adc>>"+histname, attributes, "goff");
-		return histo;
-	}
-	else if (histtype=="Time"){
-        // Determine time axis border and bin number using last time entry
-		TLeaf* leaf = data->GetBranch("Time")->GetLeaf("Time");				//Get Time Leaf
-		if (!leaf) cout << "Could not get leaf Time" << endl;
-	    data->GetEntries("Time");
-		Double_t tmax = (int)(leaf->GetValue(0) * (1.1/1E12));				//Measuring time times 1.1 in seconds = upper limit of histograms
-        Double_t tborder = 1;
-        Int_t tsteps = 1;
-        GetAxisBorderAndSteps(tmax, tborder, tsteps);
+	Double_t Nch = 16000;
+	Double_t Emax[] = {200, 6000};
 
-		//Fill Histograms with data
-		TH1D* histo = new TH1D(histname, detectors[det]+" signal rate; Time / s; Counts", tsteps, 0, tborder);							//Rate Histogram
-		data->Draw("Time/1E12>>"+histname, attributes, "goff");		//Time - Events of det
-		return histo;
-	}
-	else if (histtype=="TimeDiff"){
+	if (histtype=="TimeDiff"){
 		TH1D* histo = new TH1D(histname, "t("+detectors[det]+")-t("+detectors[det2]+"); dt / ps; Counts", 2001, -4E7-2000, 4E7+2000);
 		data->Draw(Form("TimeDiff_before%i>>"+histname, det2), attributes, "goff");
 		data->Draw(Form("-TimeDiff_after%i>>+"+histname, det2), attributes, "goff");
+		return histo;
+	}	
+	if (histtype=="adc"){
+		// Determine axis border and bin number using maximum entry
+		Double_t border = GetAxisBorder(data, histtype);
+		Int_t steps = int(border);
+		// Fill histogram with data
+		TH1D* histo = new TH1D(histname, detectors[det]+" ADC spectrum; Channel; Counts", Nch, 0, Nch);
+		data->Draw("adc>>"+histname, attributes, "goff");
+		return histo;
+	}
+	else if (histtype=="Edep"){
+		// Determine axis border and bin number using maximum entry
+		Double_t border = Emax[det];
+		Int_t steps = int(border);
+		while (steps < 1000) {steps = steps*10;}
+		// Fill histogram with data
+		TH1D* histo = new TH1D(histname, detectors[det]+" energy spectrum; E/keV; Counts", steps, 0, border);
+		data->Draw("Edep>>"+histname, attributes, "goff");
+		return histo;
+	}
+	else if (histtype=="Time"){
+		// Determine axis border and bin number using maximum entry
+		Double_t tborder = GetAxisBorder(data, histtype) * 1.E-12;
+		Int_t tsteps = int(tborder);										//Set bin number = tborder -> 1 bin = 1 s
+		// If bin number is over 20000, bin number gets reduced to 2000 < bin number <= 20000 (1 bin = 1, 10,... s)
+		while(tsteps > 20000) {tsteps = tsteps/10;}
+
+		//Fill Histogram with data
+		TH1D* histo = new TH1D(histname, detectors[det] + " signal rate; Time / s; Counts", tsteps, 0, tborder);							//Rate Histogram
+		data->Draw("Time/1E12>>"+histname, attributes, "goff");		//Time - Events of det
 		return histo;
 	}
 	else {
@@ -170,7 +180,7 @@ TH2D* GetCoincidentEvsE(TTree* data, Int_t det0, Int_t det1, Double_t minTimeDif
 // Coincidence time interval: minTimeDiff < t(det0)-t(det1) < maxTimeDiff. 
 {
 	// create histogram
-	Int_t Nch = 16000;
+	Int_t Nch = 16384;
 	TString histname = "name";
 	TH2D* h = new TH2D(histname.Data(), "; TU4 channel; TU5 channel", 2000, 0, 2000, 10000, 0, 10000);
 	
@@ -236,11 +246,13 @@ void MakeHist_230526(){
 	TString options2 = OptString(1, attributes);
 
 
-	TH1D* histogram_adc1 = HistCanvas(data, "TU5adc", "adc", options1, TU5);
-	//TH1D* histogram_time1 = HistCanvas(data, "histo_rate_TU5", "Time", options1);
+	//TH1D* histogram_adc1 = HistCanvas(data, "TU5adc", "adc", options1, TU5);
+	TH1D* histogram_E1 = HistCanvas(data, "TU5Edep", "Edep", options1, TU5);
+	TH1D* histogram_time1 = HistCanvas(data, "histo_rate_TU5", "Time", options1);
 	
-	TH1D* histogram_adc2 = HistCanvas(data, "TU4adc", "adc", options2, TU4);
-	//TH1D* histogram_time2 = HistCanvas(data, "histo_rate_TU4", "Time", options2);
+	//TH1D* histogram_adc2 = HistCanvas(data, "TU4adc", "adc", options2, TU4);
+	TH1D* histogram_E2 = HistCanvas(data, "TU4Edep", "Edep", options2, TU4);
+	TH1D* histogram_time2 = HistCanvas(data, "histo_rate_TU4", "Time", options2);
 	
 	/*/ Time difference spectra
 	TH1D* TimeDiff11 = HistCanvas(data, "TU5TU5TimeDiff", "TimeDiff", options1, TU5, TU5);
@@ -300,8 +312,9 @@ void MakeHist_230526(){
     l2->AddEntry(coincident_adc2, "coincident events");
     l2->Draw();//*/
     
-    TH2D* hEvsE = GetCoincidentEvsE(data, TU4, TU5, -4.0E6, 0.5E6);
-    TCanvas* cEvsE = new TCanvas("EvsE");
-    hEvsE->SetStats(0);
-    hEvsE->Draw("colz");
+	// Draw 2D E vs E spectrum
+    //TH2D* hEvsE = GetCoincidentEvsE(data, TU4, TU5, -4.0E6, 0.5E6);
+    //TCanvas* cEvsE = new TCanvas("EvsE");
+    //hEvsE->SetStats(0);
+    //hEvsE->Draw("colz");
 }

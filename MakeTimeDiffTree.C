@@ -35,6 +35,8 @@ using namespace std;
 
 #define MaxTime ULLONG_MAX;
 
+TF1* calibration_function[Ndet];
+
 TTree* GetSortedTree(
     TString run = "run001"
 ){
@@ -55,6 +57,7 @@ struct Event {
 	ULong64_t Time;
 	//Bool_t Pileup;
 	//Bool_t Saturation;
+	Double_t Edep;
 	Long64_t TimeDiffBefore[Ndet];
 	Long64_t EnergyDepBefore[Ndet];
 	Long64_t TimeDiffAfter[Ndet];
@@ -108,6 +111,7 @@ vector<Event*> TreeEntries(
 }
 
 void AddTimeDifferences(
+// Add calibrated energy and time differences to the events in the vector.
 	vector<Event*> GoodEvents
 ){
 	//Variable initilization
@@ -128,8 +132,21 @@ void AddTimeDifferences(
 		LastEventIn[det]->Time = GoodEvents[firstevent]->Time;
 	}
 
+	// init pseudo-random generator for MC energy calibration
+	TRandom3* rnd = new TRandom3(time(NULL));
+	for (int det = 0; det < Ndet; det++) {
+		if (!calibration_function[det])
+			cout << "No calibration function for detector " << det << endl;
+	}
+
 	//TimeDiffBefore and EnergyDepBefore with definite previous event
+	cout << "Energy calibration, TimeDifferenceBefore and EnergyDepBefore..." << endl;
 	for (ULong64_t i = firstevent; i <= lastevent; i++){
+		// MC energy calibration
+		Double_t ch = GoodEvents[i]->Adc + rnd->Uniform(0, 1);
+		Double_t E = calibration_function[GoodEvents[i]->Det]->Eval(ch);
+		GoodEvents[i]->Edep = E;
+
 		for (int det = 0; det < Ndet; det++) {
 			//GoodEvents[i]->TimeDiffAfter[det] = GoodEvents[i]->Time - LastTime[det];
 			//GoodEvents[i]->EnergyDepAfter[det] = LastAdc[det];
@@ -192,7 +209,8 @@ TFile* CreateNewFile(
     DataNew->Branch("adc",    &CurrentEvent.Adc,   "ch/S");
     //DataNew->Branch("pileup",&CurrentEvent.Pileup,"pileup/O");
     //DataNew->Branch("saturation",&CurrentEvent.Saturation,"saturation/O");
-    DataNew->Branch("Time",&CurrentEvent.Time,"Time/l");
+    DataNew->Branch("Time", &CurrentEvent.Time, "Time/l");
+	DataNew->Branch("Edep", &CurrentEvent.Edep, "Edep/D");
     for (int det = 0; det < Ndet; det++) {
 		TString name = "TimeDiff_before" + to_string(det);
 		TString leaflist = name + "/L";
@@ -213,7 +231,7 @@ TFile* CreateNewFile(
 	cout << "Start writing events into the new tree ..." << endl;
 	for (ULong64_t i = 0; i < GoodEvents.size(); i++){
 		CurrentEvent = *GoodEvents[i];
-		//cout << i << " " << CurrentEvent.Adc << " " << CurrentEvent.EnergyDepBefore[0] << " " << CurrentEvent.EnergyDepBefore[1] << endl;
+		//cout << i << " " << CurrentEvent.Adc << " " << CurrentEvent.Edep << " " << CurrentEvent.EnergyDepBefore[0] << " " << CurrentEvent.EnergyDepBefore[1] << endl;
 		DataNew->Fill();
 	}
 
@@ -223,8 +241,21 @@ TFile* CreateNewFile(
 }
 
 
+void SetCalibrationHardCoded()
+{
+	Double_t TU5_p0 = 0.130025;
+	Double_t TU5_p1 = 0.00989626;
+	Double_t TU4_p0 = -0.392633;
+	Double_t TU4_p1 = 0.330835;
+	calibration_function[0] = new TF1("fCalTU5", "pol1");
+	calibration_function[0]->SetParameters(TU5_p0, TU5_p1);
+	calibration_function[1] = new TF1("fCalTU4", "pol1");
+	calibration_function[1]->SetParameters(TU4_p0, TU4_p1);
+}
+
+
 void MakeTimeDiffTree(	
-	TString run = "run002"
+	TString run = "run001"
 
 ){
 	TTree* oldTree = GetSortedTree(run);
@@ -232,6 +263,7 @@ void MakeTimeDiffTree(
 	//Do all functions implemented above
 	vector<Event*> GoodEvents = TreeEntries(oldTree);
 	
+	SetCalibrationHardCoded();
 	AddTimeDifferences(GoodEvents);
 	
 	TFile* NewFile = CreateNewFile(GoodEvents, run);
