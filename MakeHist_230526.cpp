@@ -180,18 +180,17 @@ TH2D* GetCoincidentEvsE(TTree* data, Int_t det0, Int_t det1, Double_t minTimeDif
 // Coincidence time interval: minTimeDiff < t(det0)-t(det1) < maxTimeDiff. 
 {
 	// create histogram
-	Int_t Nch = 16384;
 	TString histname = "name";
-	TH2D* h = new TH2D(histname.Data(), "; TU4 channel; TU5 channel", 2000, 0, 2000, 10000, 0, 10000);
+	TH2D* h = new TH2D(histname.Data(), "; TU4 E/keV; TU5 E/keV", 600, 0, 600, 1000, 0, 100);
 	
 	UShort_t det = 0;
-	Short_t adc = 0;
+	Double_t Edep = 0;
 	Long64_t TimeDiffBefore = 0;
 	Long64_t TimeDiffAfter = 0;
-	Long64_t EnergyDepBefore = 0;
-	Long64_t EnergyDepAfter = 0;
+	Double_t EnergyDepBefore = 0;
+	Double_t EnergyDepAfter = 0;
 	data->SetBranchAddress("det", &det);
-	data->SetBranchAddress("adc", &adc);
+	data->SetBranchAddress("Edep", &Edep);
 	data->SetBranchAddress(Form("TimeDiff_before%i", det1), &TimeDiffBefore);
 	data->SetBranchAddress(Form("TimeDiff_after%i", det1), &TimeDiffAfter);
 	data->SetBranchAddress(Form("EnergyDep_before%i", det1), &EnergyDepBefore);
@@ -202,11 +201,11 @@ TH2D* GetCoincidentEvsE(TTree* data, Int_t det0, Int_t det1, Double_t minTimeDif
 		data->GetEvent(event);
 		if (det != det0) continue;
 		if (-TimeDiffAfter > minTimeDiff) {
-			h->Fill(adc, EnergyDepAfter); 
+			h->Fill(Edep, EnergyDepAfter); 
 			//cout << "det" << det1 << " ch " << EnergyDepAfter << " after det" << det0 << " ch " << adc << endl;
 		}
 		if (TimeDiffBefore < maxTimeDiff) {
-			h->Fill(adc, EnergyDepBefore); 
+			h->Fill(Edep, EnergyDepBefore); 
 			//cout << "det" << det1 << " ch " << EnergyDepAfter << " before det" << det0 << " ch " << adc << endl;
 		}
 		//cout << "det " << det << " adc " << adc << " dtBefore " << TimeDiffBefore << " dtAfter " << TimeDiffAfter << endl;
@@ -248,11 +247,11 @@ void MakeHist_230526(){
 
 	//TH1D* histogram_adc1 = HistCanvas(data, "TU5adc", "adc", options1, TU5);
 	TH1D* histogram_E1 = HistCanvas(data, "TU5Edep", "Edep", options1, TU5);
-	TH1D* histogram_time1 = HistCanvas(data, "histo_rate_TU5", "Time", options1);
+	//TH1D* histogram_time1 = HistCanvas(data, "histo_rate_TU5", "Time", options1);
 	
 	//TH1D* histogram_adc2 = HistCanvas(data, "TU4adc", "adc", options2, TU4);
 	TH1D* histogram_E2 = HistCanvas(data, "TU4Edep", "Edep", options2, TU4);
-	TH1D* histogram_time2 = HistCanvas(data, "histo_rate_TU4", "Time", options2);
+	//TH1D* histogram_time2 = HistCanvas(data, "histo_rate_TU4", "Time", options2);
 	
 	/*/ Time difference spectra
 	TH1D* TimeDiff11 = HistCanvas(data, "TU5TU5TimeDiff", "TimeDiff", options1, TU5, TU5);
@@ -283,38 +282,38 @@ void MakeHist_230526(){
     TString man_sel = "";
     // TU5 spectrum of coincident events 
     man_sel = "det==0 && (TimeDiff_after1<0.5E6 || TimeDiff_before1<4.E6)";
-    TH1D* coincident_adc1 = HistCanvas(data, "CoincTU5adc", "adc", man_sel, TU5, 0);
+    TH1D* coincident_E1 = HistCanvas(data, "CoincTU5Edep", "Edep", man_sel, TU5, 0);
     // TU4 spectrum of coincident events 
-    man_sel = "det==1 && ((TimeDiff_after0<4.E6 && (EnergyDep_after0>2700 && EnergyDep_after0<3173)) || (TimeDiff_before0<0.5E6 && (EnergyDep_before0>2700 && EnergyDep_before0<3173)))"; // 2700-3173 & 3489-3667
-    TH1D* coincident_adc2 = HistCanvas(data, "CoincTU4adc", "adc", man_sel, TU4, 0);
+    man_sel = "det==1 && ((TimeDiff_after0<4.E6 && (EnergyDep_after0>30 && EnergyDep_after0<32)) || (TimeDiff_before0<0.5E6 && (EnergyDep_before0>30 && EnergyDep_before0<32)))"; // 2700-3173 & 3489-3667
+    TH1D* coincident_E2 = HistCanvas(data, "CoincTU4Edep", "Edep", man_sel, TU4, 0);
     //*/
     
     /*/ Draw coincident spectra together with raw ones
-    TCanvas* cAdc1 = new TCanvas("TU5adc", "TU5adc");
+    TCanvas* cEdep1 = new TCanvas("TU5Edep", "TU5Edep");
     gPad->SetLogy();
-    histogram_adc1->Draw();
-    histogram_adc1->GetXaxis()->SetRangeUser(0, 5000);
-    coincident_adc1->SetLineColor(kRed);
-    coincident_adc1->Draw("same");
+    histogram_E1->Draw();
+    histogram_E1->GetXaxis()->SetRangeUser(0, 5000);
+    coincident_E1->SetLineColor(kRed);
+    coincident_E1->Draw("same");
     TLegend* l1 = new TLegend(0.6, 0.7, 0.85, 0.8);
-    l1->AddEntry(histogram_adc1, "all events");
-    l1->AddEntry(coincident_adc1, "coincident events");
+    l1->AddEntry(histogram_E1, "all events");
+    l1->AddEntry(coincident_E1, "coincident events");
     l1->Draw();
     
-    TCanvas* cAdc2 = new TCanvas("TU4adc", "TU4adc");
+    TCanvas* cE2 = new TCanvas("TU4Edep", "TU4Edep");
     gPad->SetLogy();
-    histogram_adc2->Draw();
-    histogram_adc2->GetXaxis()->SetRangeUser(0, 10000);
-    coincident_adc2->SetLineColor(kRed);
-    coincident_adc2->Draw("same");
+    histogram_E2->Draw();
+    histogram_E2->GetXaxis()->SetRangeUser(0, 10000);
+    coincident_E2->SetLineColor(kRed);
+    coincident_E2->Draw("same");
     TLegend* l2 = new TLegend(0.6, 0.7, 0.85, 0.8);
-    l2->AddEntry(histogram_adc2, "all events");
-    l2->AddEntry(coincident_adc2, "coincident events");
+    l2->AddEntry(histogram_E2, "all events");
+    l2->AddEntry(coincident_E2, "coincident events");
     l2->Draw();//*/
     
 	// Draw 2D E vs E spectrum
-    //TH2D* hEvsE = GetCoincidentEvsE(data, TU4, TU5, -4.0E6, 0.5E6);
-    //TCanvas* cEvsE = new TCanvas("EvsE");
-    //hEvsE->SetStats(0);
-    //hEvsE->Draw("colz");
+    TH2D* hEvsE = GetCoincidentEvsE(data, TU4, TU5, -4.0E6, 0.5E6);
+    TCanvas* cEvsE = new TCanvas("EvsE");
+    hEvsE->SetStats(0);
+    hEvsE->Draw("colz");
 }

@@ -59,9 +59,9 @@ struct Event {
 	//Bool_t Saturation;
 	Double_t Edep;
 	Long64_t TimeDiffBefore[Ndet];
-	Long64_t EnergyDepBefore[Ndet];
+	Double_t EnergyDepBefore[Ndet];
 	Long64_t TimeDiffAfter[Ndet];
-	Long64_t EnergyDepAfter[Ndet];
+	Double_t EnergyDepAfter[Ndet];
 };
 
 vector<Event*> TreeEntries(
@@ -127,7 +127,7 @@ void AddTimeDifferences(
 		//LastAdc[det] = 0;
 		//LastTime[det] = 0;
 		LastEventIn[det] = new Event;
-		LastEventIn[det]->Adc = 0;
+		LastEventIn[det]->Edep = 0;
 		LastEventIn[det]->Det = det;
 		LastEventIn[det]->Time = GoodEvents[firstevent]->Time;
 	}
@@ -151,7 +151,7 @@ void AddTimeDifferences(
 			//GoodEvents[i]->TimeDiffAfter[det] = GoodEvents[i]->Time - LastTime[det];
 			//GoodEvents[i]->EnergyDepAfter[det] = LastAdc[det];
 			GoodEvents[i]->TimeDiffBefore[det] = GoodEvents[i]->Time - LastEventIn[det]->Time;
-			GoodEvents[i]->EnergyDepBefore[det] = (Long64_t)LastEventIn[det]->Adc;
+			GoodEvents[i]->EnergyDepBefore[det] = LastEventIn[det]->Edep;
 		}
 		//cout << "event " << i << " det" << GoodEvents[i]->Det << " Adc " << GoodEvents[i]->Adc << " EnergyDepBefore[0] " << GoodEvents[i]->EnergyDepBefore[0] << " EnergyDepBefore[1] " << GoodEvents[i]->EnergyDepBefore[1] << endl;
 		//LastTime[GoodEvents[i]->Det] = GoodEvents[i]->Time;
@@ -165,7 +165,7 @@ void AddTimeDifferences(
 		//LastAdc[det] = 0;
 		//LastTime[det] = MaxTime;
 		LastEventIn[det] = new Event;
-		LastEventIn[det]->Adc = 0;
+		LastEventIn[det]->Edep = 0;
 		LastEventIn[det]->Det = det;
 		LastEventIn[det]->Time = GoodEvents[lastevent]->Time;
 	}
@@ -179,7 +179,7 @@ void AddTimeDifferences(
 			//GoodEvents[i]->TimeDiffAfter[det] = LastTime[det] - GoodEvents[i]->Time;
 			//GoodEvents[i]->EnergyDepAfter[det] = LastAdc[det];
 			GoodEvents[i]->TimeDiffAfter[det] = LastEventIn[det]->Time - GoodEvents[i]->Time;
-			GoodEvents[i]->EnergyDepAfter[det] = (Long64_t)LastEventIn[det]->Adc;
+			GoodEvents[i]->EnergyDepAfter[det] = LastEventIn[det]->Edep;
 		}
 		//cout << "event " << i << " det" << GoodEvents[i]->Det << " Adc " << GoodEvents[i]->Adc << " EnergyDepAfter[0] " << GoodEvents[i]->EnergyDepAfter[0] << " EnergyDepAfter[1] " << GoodEvents[i]->EnergyDepAfter[1] << endl;
 		//LastTime[GoodEvents[i]->Det] = GoodEvents[i]->Time;
@@ -219,10 +219,10 @@ TFile* CreateNewFile(
 		leaflist = name + "/L";
 		DataNew->Branch(name.Data(), &CurrentEvent.TimeDiffAfter[det], leaflist.Data());
 		name = "EnergyDep_before" + to_string(det);
-		leaflist = name + "/L";
+		leaflist = name + "/D";
 		DataNew->Branch(name.Data(), &CurrentEvent.EnergyDepBefore[det], leaflist.Data());
 		name = "EnergyDep_after" + to_string(det);
-		leaflist = name + "/L";
+		leaflist = name + "/D";
 		DataNew->Branch(name.Data(), &CurrentEvent.EnergyDepAfter[det], leaflist.Data());
 	}
 	cout << "Branches created" << endl;
