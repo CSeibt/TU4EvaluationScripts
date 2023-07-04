@@ -100,8 +100,8 @@ Double_t GetAxisBorder(TTree* data, TString columname)
 
 TH1D* Histogram(
 	TTree* data,
-	TString histtype,
 	TString histname,
+	TString histtype,
 	TString attributes,
 	Int_t det = 0,														//det and det2 only necessary if histtype = TimeDiff
 	Int_t det2 = 1
@@ -149,7 +149,7 @@ TH1D* Histogram(
 		return histo;
 	}
 	else {
-		cout << "Wrong histtype!" << endl;
+		cout << "Wrong histtype: " << histtype << endl;
 		return 0;
 	}
 }
@@ -165,7 +165,7 @@ TH1D* HistCanvas(
 // Create a histogram of given options and draw it into a canvas.
 	TCanvas* c1 = new TCanvas(histname, histname, 100, 10, 1200, 700);
 	gPad->SetLogy(true);
-	TH1D* histogram = Histogram(data, histtype, histname, attributes, det0, det1);
+	TH1D* histogram = Histogram(data, histname, histtype, attributes, det0, det1);
 	histogram->SetStats(0);
 	histogram->Draw();
 	
@@ -246,11 +246,11 @@ void MakeHist_230526(){
 
 
 	//TH1D* histogram_adc1 = HistCanvas(data, "TU5adc", "adc", options1, TU5);
-	TH1D* histogram_E1 = HistCanvas(data, "TU5Edep", "Edep", options1, TU5);
+	TH1D* histogram_E1 = Histogram(data, "TU5Edep", "Edep", options1, TU5);
 	//TH1D* histogram_time1 = HistCanvas(data, "histo_rate_TU5", "Time", options1);
 	
 	//TH1D* histogram_adc2 = HistCanvas(data, "TU4adc", "adc", options2, TU4);
-	TH1D* histogram_E2 = HistCanvas(data, "TU4Edep", "Edep", options2, TU4);
+	TH1D* histogram_E2 = Histogram(data, "TU4Edep", "Edep", options2, TU4);
 	//TH1D* histogram_time2 = HistCanvas(data, "histo_rate_TU4", "Time", options2);
 	
 	/*/ Time difference spectra
@@ -278,7 +278,7 @@ void MakeHist_230526(){
 	TimeDiff22->Draw();
 	//*/
 
-    /*/ Checks with manual selection string
+    // Checks with manual selection string
     TString man_sel = "";
     // TU5 spectrum of coincident events 
     man_sel = "det==0 && (TimeDiff_after1<0.5E6 || TimeDiff_before1<4.E6)";
@@ -288,7 +288,7 @@ void MakeHist_230526(){
     TH1D* coincident_E2 = HistCanvas(data, "CoincTU4Edep", "Edep", man_sel, TU4, 0);
     //*/
     
-    /*/ Draw coincident spectra together with raw ones
+    // Draw coincident spectra together with raw ones
     TCanvas* cEdep1 = new TCanvas("TU5Edep", "TU5Edep");
     gPad->SetLogy();
     histogram_E1->Draw();
@@ -315,5 +315,5 @@ void MakeHist_230526(){
     TH2D* hEvsE = GetCoincidentEvsE(data, TU4, TU5, -4.0E6, 0.5E6);
     TCanvas* cEvsE = new TCanvas("EvsE");
     hEvsE->SetStats(0);
-    hEvsE->Draw("colz");
+    hEvsE->Draw("colz");//*/
 }

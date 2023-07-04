@@ -178,13 +178,14 @@ TF1* Calibration(TH1D* hCh, Double_t guess_p1, string calib_name, TH1D* cal_hist
         gCal->SetMarkerSize(2);
         gCal->Draw("ap");
         fCal->Draw("same");
-        gCal->GetXaxis()->SetRangeUser(0, 12000);
-        gCal->GetYaxis()->SetRangeUser(0, 3000);
+        //gCal->GetXaxis()->SetRangeUser(0, 12000);
+        //gCal->GetYaxis()->SetRangeUser(0, 3000);
 
         TGraphErrors* gWth = new TGraphErrors(calib_data_filename.c_str(), "%*lg %lg %lg %*lg %lg %lg");
         //Double_t m = fCal->GetParameter(1);
         //ScaleXY(gWth, 1.0, m);
-        gWth->SetTitle("Width; E / keV; FWHM / keV");
+        string width_graphtitle = calib_name + " width; E / keV; FWHM / keV";
+        gWth->SetTitle(width_graphtitle.c_str());
 
         canvas_name = "Width_"+calib_name;
         new TCanvas(canvas_name.c_str());
@@ -227,7 +228,7 @@ void CalibrateTU5_133Ba(TH1D* hCh)
 }
 
 void CalibrateTU4_133Ba(TH1D* hCh)
-// Do calibration for the TU5 Detector. 
+// Do calibration for the TU4 Detector. 
 // Includes all hard-coded preferences: ROIs, guessed calibration factor, detector name
 {
     ClearROIs();

@@ -95,6 +95,7 @@ vector<Event*> TreeEntries(
 			CurrentEvent->Time = time;
 			//CurrentEvent->Pileup = pileup;
 			//CurrentEvent->Saturation = saturation;
+			CurrentEvent->Edep = 0;
 			for (int det = 0; det < Ndet; det++) {
 				CurrentEvent->TimeDiffBefore[det] = MaxTime;
 				CurrentEvent->EnergyDepBefore[det] = 0;
@@ -243,10 +244,10 @@ TFile* CreateNewFile(
 
 void SetCalibrationHardCoded()
 {
-	Double_t TU5_p0 = 0.130025;
-	Double_t TU5_p1 = 0.00989626;
-	Double_t TU4_p0 = -0.392633;
-	Double_t TU4_p1 = 0.330835;
+	Double_t TU5_p0 = 0.125265;
+	Double_t TU5_p1 = 0.00988977;
+	Double_t TU4_p0 = -0.380873;
+	Double_t TU4_p1 = 0.331185;
 	calibration_function[0] = new TF1("fCalTU5", "pol1");
 	calibration_function[0]->SetParameters(TU5_p0, TU5_p1);
 	calibration_function[1] = new TF1("fCalTU4", "pol1");
