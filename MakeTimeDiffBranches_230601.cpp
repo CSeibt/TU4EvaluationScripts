@@ -251,13 +251,13 @@ TFile* CreateNewFile(
     DataNew->Branch("saturation",&CurrentEvent.Saturation,"saturation/O");
     DataNew->Branch("time",&CurrentEvent.Time,"time/l");
 	DataNew->Branch("TimeDiff_before0", &CurrentEvent.TimeDiffBefore0, "TimeDiff_before0/L");
-	DataNew->Branch("TimeDiff_after0", &CurrentEvent.TimeDiffAfter0, "TimeDIff_after0/L");
-	DataNew->Branch("EnergyDep_before0", &CurrentEvent.EnergyDepBefore0, "EnergyDep_before0/L");
-	DataNew->Branch("EnergyDep_after0", &CurrentEvent.EnergyDepAfter0, "EnergyDep_after0/L");
+	DataNew->Branch("TimeDiff_after0", &CurrentEvent.TimeDiffAfter0, "TimeDiff_after0/L");
+	DataNew->Branch("EnergyDep_before0", &CurrentEvent.EnergyDepBefore0, "EnergyDep_before0/S");
+	DataNew->Branch("EnergyDep_after0", &CurrentEvent.EnergyDepAfter0, "EnergyDep_after0/S");
 	DataNew->Branch("TimeDiff_before1", &CurrentEvent.TimeDiffBefore1, "TimeDiff_before1/L");
-	DataNew->Branch("TimeDiff_after1", &CurrentEvent.TimeDiffAfter1, "TimeDIff_after1/L");
-	DataNew->Branch("EnergyDep_before1", &CurrentEvent.EnergyDepBefore1, "EnergyDep_before1/L");
-	DataNew->Branch("EnergyDep_after1", &CurrentEvent.EnergyDepAfter1, "EnergyDep_after1/L");
+	DataNew->Branch("TimeDiff_after1", &CurrentEvent.TimeDiffAfter1, "TimeDiff_after1/L");
+	DataNew->Branch("EnergyDep_before1", &CurrentEvent.EnergyDepBefore1, "EnergyDep_before1/S");
+	DataNew->Branch("EnergyDep_after1", &CurrentEvent.EnergyDepAfter1, "EnergyDep_after1/S");
 	cout << "Branches created" << endl;
 	
 	//Iterate over vector and write Events on the Tree
