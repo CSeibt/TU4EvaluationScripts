@@ -285,9 +285,10 @@ TTree* MakePrelimDataTree(TString run, vector<FILE*> fin)
 }
 
 void MakeRawTree(
-    TString run = "run002",
-    TString folder = "/ZIH.fast/users/felsdaq/TUBunker/TU5/TU5_TU4_230524_coincidence/DAQ/"  //Path of the .bin file which shall be evaluated
-    //TString folder = "/home/hans/Uni/EC/TU5_TU4_coincidence/DAQ/"  //Path of the .bin file which shall be evaluated
+    TString run = "run034",
+    TString folder = "/ZIH.fast/users/hoffmann/TU5/deleteme/"  //Path of the .bin file which shall be evaluated
+    //TString folder = "/ZIH.fast/users/felsdaq/TUBunker/TU5/Bea/11.4_Test/DAQ"  //Path of the .bin file which shall be evaluated
+    //TString folder = "/home/hans/Uni/EC/TU5/DAQ/"  //Path of the .bin file which shall be evaluated
 )
 {
 	TString suffix = "/RAW/";
@@ -296,7 +297,7 @@ void MakeRawTree(
 
     vector<FILE*> fin = GetInputFiles(input);
     
-    TFile *rootFile = new TFile(run+".root","RECREATE");
+    TFile *rootFile = new TFile("../EvaluationData/"+run+".root","RECREATE");
 	cout << "created new file " << endl;
     TTree* prelimDataTree = MakePrelimDataTree(run, fin);
     rootFile->cd("/");
