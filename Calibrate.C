@@ -170,9 +170,25 @@ TF1* Calibration(TH1D* hCh, Double_t guess_p1, string calib_name, TH1D* cal_hist
     TF1* fCal = new TF1("fCal", "pol1", 0, 16000);
     gCal->Fit("fCal", "0Q");
 
-    if (draw) {
-        // Draw
-        string canvas_name = "Calibration_"+calib_name;
+    if (draw) { // Draw
+	// Open the peaks' width as graph
+        TGraphErrors* gWth = new TGraphErrors(calib_data_filename.c_str(), "%*lg %lg %lg %*lg %lg %lg");
+        //Double_t m = fCal->GetParameter(1);
+        //ScaleXY(gWth, 1.0, m);
+        string width_graphtitle = calib_name + " width; E / keV; FWHM / keV";
+        gWth->SetTitle(width_graphtitle.c_str());
+
+	// Draw width
+        string canvas_name = "Width_"+calib_name;
+        new TCanvas(canvas_name.c_str());
+        gWth->SetMarkerStyle(32);
+        gWth->SetMarkerSize(2);
+        gWth->Draw("ap");
+        gWth->GetXaxis()->SetRangeUser(0, 3000);
+        gWth->GetYaxis()->SetRangeUser(0, 4);
+
+	// Draw calibration curve
+        canvas_name = "Calibration_"+calib_name;
         new TCanvas(canvas_name.c_str());
         gCal->SetMarkerStyle(33);
         gCal->SetMarkerSize(2);
@@ -181,19 +197,6 @@ TF1* Calibration(TH1D* hCh, Double_t guess_p1, string calib_name, TH1D* cal_hist
         //gCal->GetXaxis()->SetRangeUser(0, 12000);
         //gCal->GetYaxis()->SetRangeUser(0, 3000);
 
-        TGraphErrors* gWth = new TGraphErrors(calib_data_filename.c_str(), "%*lg %lg %lg %*lg %lg %lg");
-        //Double_t m = fCal->GetParameter(1);
-        //ScaleXY(gWth, 1.0, m);
-        string width_graphtitle = calib_name + " width; E / keV; FWHM / keV";
-        gWth->SetTitle(width_graphtitle.c_str());
-
-        canvas_name = "Width_"+calib_name;
-        new TCanvas(canvas_name.c_str());
-        gWth->SetMarkerStyle(32);
-        gWth->SetMarkerSize(2);
-        gWth->Draw("ap");
-        gWth->GetXaxis()->SetRangeUser(0, 3000);
-        gWth->GetYaxis()->SetRangeUser(0, 4);
     }
 
     if (output) {
@@ -227,30 +230,14 @@ void CalibrateTU5_133Ba(TH1D* hCh)
     Calibration(hCh, guess_p1, "TU5");
 }
 
-void CalibrateTU4_133Ba(TH1D* hCh)
-// Do calibration for the TU4 Detector. 
-// Includes all hard-coded preferences: ROIs, guessed calibration factor, detector name
-{
-    ClearROIs();
-    AddROI(80.9979, 70, 70, 90, 90);
-    AddROI(276.3989, 260, 260, 290, 290);
-    AddROI(302.8508, 290, 290, 320, 320);
-    AddROI(356.0129, 340, 340, 370, 370);
-    PrintROIs();
-
-    // guess calibration
-    Double_t guess_p1 = 0.33;
-
-    Calibration(hCh, guess_p1, "TU4");
-}
-
 void Calibrate(
 //    string filename = "/home/hans/Uni/EC/TU5_TU4_coincidence/TU4EvaluationScripts/run002.root"
-    string filename = "run001.root"
+    string filename = "run038.root"
 )
 {
     // Open root file
-    TFile* file = TFile::Open(filename.c_str(), "READ");
+    string input = "../EvaluationData/" + filename;
+    TFile* file = TFile::Open(input.c_str(), "READ");
     if (!file) cout << "Could not open " << filename << endl;
     // Get data tree
     TTree* data = (TTree*)file->Get("Data");
@@ -265,14 +252,4 @@ void Calibrate(
     data->Draw(varexp.Data(), selection.Data(), "goff");
     // calibration
     CalibrateTU5_133Ba(hChTU5);
-
-    // TU4 calibration
-    // Get uncalibrated adc histograms
-    histname = "hChTU4";
-    TH1D* hChTU4 = new TH1D(histname.Data(), ";TU4 ADC channel; counts", Nch, 0, Nch);
-    varexp = "adc>>"+histname;
-    selection = "det==1 && pileup==0 && saturation==0";
-    data->Draw(varexp.Data(), selection.Data(), "goff");
-    // calibration
-    CalibrateTU4_133Ba(hChTU4);
 }
