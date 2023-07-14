@@ -176,11 +176,11 @@ void BinToRoot(
     struct stat st = {0};
 
 	if (stat("Test_230526/"+run+"/root", &st) == -1) {
-		int directory1 = mkdir("Test_230526/"+run, 0777);
-		int directory2 = mkdir("Test_230526/"+run+"/root", 0777);
+		int directory1 = mkdir("../Test_230526/"+run, 0777);
+		int directory2 = mkdir("../Test_230526/"+run+"/root", 0777);
 		cout << "Created new directory" << endl;
 	}
-    TFile *rootFile = new TFile("Test_230526/" + run + "/root/"+binfiles[0]+"_without_timediff.root","RECREATE");
+    TFile *rootFile = new TFile("../Test_230526/" + run + "/root/"+binfiles[0]+"_without_timediff.root","RECREATE");
 	cout << "created new file " << endl;
     // Plant the data tree.
     TTree *Data = new TTree("Data","TU5 data");
@@ -581,7 +581,7 @@ void BinToRoot(
 
 void MakeTree_230526(){
 	//Main function
-	TString run = "run001";				//run id
+	TString run = "run003";				//run id
 	BinToRoot(run, false, false);
 	//		  run, hist,  drawh, more information within 'BinToRoot'
 }
