@@ -181,7 +181,7 @@ TH2D* GetCoincidentEvsE(TTree* data, Int_t det0, Int_t det1, Double_t minTimeDif
 {
 	// create histogram
 	TString histname = "name";
-	TH2D* h = new TH2D(histname.Data(), "; TU4 E/keV; TU5 E/keV", 600, 0, 600, 1000, 0, 100);
+	TH2D* h = new TH2D(histname.Data(), "; TU4 E/keV; TU5 E/keV", 800, 0, 800, 1000, 0, 100);
 	
 	UShort_t det = 0;
 	Double_t Edep = 0;
@@ -227,7 +227,7 @@ void MakeHist_230526(){
     gStyle->SetStripDecimals(kFALSE);
 
     //Variables
-    TString run = "run001";			//run
+    TString run = "run004";			//run
     Int_t TU5 = 0;					//TU5 (X-ray detector)
     Int_t TU4 = 1;					//TU4 (Ge detector)
     Double_t thrTimediff = 1.E4;	//time difference threshold
@@ -257,7 +257,7 @@ void MakeHist_230526(){
 	TH1D* TimeDiff11 = HistCanvas(data, "TU5TU5TimeDiff", "TimeDiff", options1, TU5, TU5);
 	TH1D* TimeDiff22 = HistCanvas(data, "TU4TU4TimeDiff", "TimeDiff", options2, TU4, TU4);
 	TH1D* TimeDiff12 = HistCanvas(data, "TU5TU4TimeDiff", "TimeDiff", options1, TU5, TU4); // t(TU5)-t(TU4), all TU5 events filled twice
-	TH1D* TimeDiff21 = HistCanvas(data, "TU4TU5TimeDiff", "TimeDiff", options2, TU4, TU5);
+	TH1D* TimeDiff21 = HistCanvas(data, "TU4TU5TimeDiff", "TimeDiff", options2, TU4, TU5);//*/
 	/*TCanvas* cTimeDiff = new TCanvas("TimeDiff", "TimeDiff");
 	cTimeDiff->Divide(2,2);
 	cTimeDiff->cd(1);
@@ -292,7 +292,8 @@ void MakeHist_230526(){
     TCanvas* cEdep1 = new TCanvas("TU5Edep", "TU5Edep");
     gPad->SetLogy();
     histogram_E1->Draw();
-    histogram_E1->GetXaxis()->SetRangeUser(0, 5000);
+    histogram_E1->SetStats(0);
+    histogram_E1->GetXaxis()->SetRangeUser(0, 100);
     coincident_E1->SetLineColor(kRed);
     coincident_E1->Draw("same");
     TLegend* l1 = new TLegend(0.6, 0.7, 0.85, 0.8);
@@ -303,7 +304,8 @@ void MakeHist_230526(){
     TCanvas* cE2 = new TCanvas("TU4Edep", "TU4Edep");
     gPad->SetLogy();
     histogram_E2->Draw();
-    histogram_E2->GetXaxis()->SetRangeUser(0, 10000);
+    histogram_E2->SetStats(0);
+    histogram_E2->GetXaxis()->SetRangeUser(0, 800);
     coincident_E2->SetLineColor(kRed);
     coincident_E2->Draw("same");
     TLegend* l2 = new TLegend(0.6, 0.7, 0.85, 0.8);
