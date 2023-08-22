@@ -58,8 +58,11 @@ vector<FILE*> GetInputFiles(TString input)
     return fin;
 }
 
-TTree* MakePrelimDataTree(TString run, vector<FILE*> fin)
+TTree* MakePrelimDataTree(TString run, vector<FILE*> fin, int finstart = 0, int finstop = -1)
 {
+    int fstart = finstart;
+    int fstop = finstop;
+    if (finstop < 0) fstop = fin.size();
 
 	double maxtime = 864000.;
 	double mintime = 0.;
@@ -167,7 +170,7 @@ TTree* MakePrelimDataTree(TString run, vector<FILE*> fin)
     do{
 		nentries = 0;
 		//fill the last read value in the array if any
-		for (int filen=0; filen<fin.size(); filen++) {
+		for (int filen = fstart; filen < fstop; filen++) {
 			if(timeAdoptW[nentriesMAX-1-filen]!=0){
 				cout << "Fill the last read value in the array... " << endl;
 				timeAdoptW[nentries]	= timeAdoptW[nentriesMAX-1-filen];
@@ -181,7 +184,7 @@ TTree* MakePrelimDataTree(TString run, vector<FILE*> fin)
 			}
 		}
 		//cout << "N: " << nentries << endl;
-		for (int filen=0;filen<fin.size();filen++) {
+		for (int filen = fstart; filen < fstop; filen++) {
 			//cout << "test " << endl;
 			//zero the temp variables
 			timeAdoptW[nentriesMAX-1-filen] = 0;
@@ -224,7 +227,7 @@ TTree* MakePrelimDataTree(TString run, vector<FILE*> fin)
 		} // for
 		
 		//Check if we reached the end of all files, if so than stop (otherwise the last warp would also be sorted again also when no entries are in)
-		for (i=0;i<fin.size();i++) {
+		for (i = fstart; i < fstop; i++) {
 			NrOfFilesEnded += feof(fin[i]);
 		}
 		cout << " "<<endl;
@@ -279,14 +282,14 @@ TTree* MakePrelimDataTree(TString run, vector<FILE*> fin)
 			cout << Form("%.1f",100.*p/nentries) <<"% done. " << "Time= " << timeAdopt/1.0E12 << " sec, now altogether " << Data->GetEntries()-1 << " preliminary entries."  << endl;
 		}
 		
-    }while (NrOfFilesEnded<fin.size() && timeAdopt/1.0E12<=maxtime); 
+    }while (NrOfFilesEnded < fstop - fstart && timeAdopt/1.0E12<=maxtime);
 
     return Data;
 }
 
 void MakeRawTree(
-    TString run = "run004",
-    TString folder = "/ZIH.fast/users/felsdaq/TUBunker/TU5/TU5_TU4_230524_coincidence/DAQ/"  //Path of the .bin file which shall be evaluated
+    TString run = "run001",
+    TString folder = "/ZIH.fast/users/felsdaq/TUBunker/TU5/TU5_TU4_230816_As/DAQ/"  //Path of the .bin file which shall be evaluated
     //TString folder = "/home/hans/Uni/EC/TU5_TU4_coincidence/DAQ/"  //Path of the .bin file which shall be evaluated
 )
 {
@@ -298,7 +301,7 @@ void MakeRawTree(
     
     TFile *rootFile = new TFile(run+".root","RECREATE");
 	cout << "created new file " << endl;
-    TTree* prelimDataTree = MakePrelimDataTree(run, fin);
+    TTree* prelimDataTree = MakePrelimDataTree(run, fin, 0, 1);
     rootFile->cd("/");
     prelimDataTree->Write("Data", TObject::kOverwrite);
     rootFile->Save();

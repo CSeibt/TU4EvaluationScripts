@@ -220,7 +220,7 @@ TH2D* GetCoincidentEvsE(TTree* data, Int_t det0, Int_t det1, Double_t minTimeDif
 	return h;
 }
 
-void MakeHist_230526(){
+void MakeHist(){
 	//General cosmetics
 	gStyle->SetOptStat(1001111);
     gStyle->SetOptFit(0);
