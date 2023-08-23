@@ -211,7 +211,7 @@ TF1* Calibration(TH1D* hCh, Double_t guess_p1, string calib_name, TH1D* cal_hist
     return fCal;
 }
 
-void CalibrateTU5_133Ba(TH1D* hCh)
+void CalibrateTU5_76As(TH1D* hCh)
 // Do calibration for the TU5 Detector. 
 // Includes all hard-coded preferences: ROIs, guessed calibration factor
 {
@@ -227,15 +227,15 @@ void CalibrateTU5_133Ba(TH1D* hCh)
     Calibration(hCh, guess_p1, "TU5");
 }
 
-void CalibrateTU4_133Ba(TH1D* hCh)
+void CalibrateTU4_76As(TH1D* hCh)
 // Do calibration for the TU4 Detector. 
 // Includes all hard-coded preferences: ROIs, guessed calibration factor, detector name
 {
     ClearROIs();
-    AddROI(80.9979, 70, 70, 90, 90);
-    AddROI(276.3989, 260, 260, 290, 290);
-    AddROI(302.8508, 290, 290, 320, 320);
-    AddROI(356.0129, 340, 340, 370, 370);
+    AddROI(559.10, 1670, 1670, 1700, 1700);
+    //AddROI(657.05, 1950, 1950, );
+    AddROI(2655.30, 8050, 8050, 8090, 8090);
+    AddROI(2669.7, 8100, 8100, 8130, 8130);
     PrintROIs();
 
     // guess calibration

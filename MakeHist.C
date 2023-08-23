@@ -245,13 +245,13 @@ void MakeHist(){
 	TString options2 = OptString(1, attributes);
 
 
-	//TH1D* histogram_adc1 = HistCanvas(data, "TU5adc", "adc", options1, TU5);
-	TH1D* histogram_E1 = Histogram(data, "TU5Edep", "Edep", options1, TU5);
-	//TH1D* histogram_time1 = HistCanvas(data, "histo_rate_TU5", "Time", options1);
+	TH1D* histogram_adc1 = HistCanvas(data, "TU5adc", "adc", options1, TU5);
+	//TH1D* histogram_E1 = Histogram(data, "TU5Edep", "Edep", options1, TU5);
+	TH1D* histogram_time1 = HistCanvas(data, "histo_rate_TU5", "Time", options1);
 	
-	//TH1D* histogram_adc2 = HistCanvas(data, "TU4adc", "adc", options2, TU4);
-	TH1D* histogram_E2 = Histogram(data, "TU4Edep", "Edep", options2, TU4);
-	//TH1D* histogram_time2 = HistCanvas(data, "histo_rate_TU4", "Time", options2);
+	TH1D* histogram_adc2 = HistCanvas(data, "TU4adc", "adc", options2, TU4);
+	//TH1D* histogram_E2 = Histogram(data, "TU4Edep", "Edep", options2, TU4);
+	TH1D* histogram_time2 = HistCanvas(data, "histo_rate_TU4", "Time", options2);
 	
 	/*/ Time difference spectra
 	TH1D* TimeDiff11 = HistCanvas(data, "TU5TU5TimeDiff", "TimeDiff", options1, TU5, TU5);
@@ -278,7 +278,7 @@ void MakeHist(){
 	TimeDiff22->Draw();
 	//*/
 
-    // Checks with manual selection string
+    /*/ Checks with manual selection string
     TString man_sel = "";
     // TU5 spectrum of coincident events 
     man_sel = "det==0 && (TimeDiff_after1<0.5E6 || TimeDiff_before1<4.E6)";
@@ -288,7 +288,7 @@ void MakeHist(){
     TH1D* coincident_E2 = HistCanvas(data, "CoincTU4Edep", "Edep", man_sel, TU4, 0);
     //*/
     
-    // Draw coincident spectra together with raw ones
+    /*/ Draw coincident spectra together with raw ones
     TCanvas* cEdep1 = new TCanvas("TU5Edep", "TU5Edep");
     gPad->SetLogy();
     histogram_E1->Draw();
@@ -313,7 +313,7 @@ void MakeHist(){
     l2->AddEntry(coincident_E2, "coincident events");
     l2->Draw();//*/
     
-	// Draw 2D E vs E spectrum
+    /*/ Draw 2D E vs E spectrum
     TH2D* hEvsE = GetCoincidentEvsE(data, TU4, TU5, -4.0E6, 0.5E6);
     TCanvas* cEvsE = new TCanvas("EvsE");
     hEvsE->SetStats(0);
