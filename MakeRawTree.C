@@ -1,7 +1,7 @@
 
 #include <dirent.h>
 
-#define nentriesMAX 200000000
+#define nentriesMAX 3000000000
 
 vector<FILE*> GetInputFiles(TString input)
 {
@@ -293,17 +293,22 @@ void MakeRawTree(
     //TString folder = "/home/hans/Uni/EC/TU5_TU4_coincidence/DAQ/"  //Path of the .bin file which shall be evaluated
 )
 {
-	TString suffix = "/RAW/";
+    int groupfiles = 4;
+    TString suffix = "/RAW/";
     TString input = folder + run + suffix;
     cout << "input: " << input << endl;
 
     vector<FILE*> fin = GetInputFiles(input);
     
-    TFile *rootFile = new TFile(run+".root","RECREATE");
-	cout << "created new file " << endl;
-    TTree* prelimDataTree = MakePrelimDataTree(run, fin, 0, 1);
-    rootFile->cd("/");
-    prelimDataTree->Write("Data", TObject::kOverwrite);
-    rootFile->Save();
-    rootFile->Close();
+    for (int fstart = 0; fstart < fin.size(); fstart += groupfiles)
+    {
+      TString filename = run+"_"+to_string(fstart)+".root";
+      TFile *rootFile = new TFile(filename,"RECREATE");
+      cout << "created new file " << endl;
+      TTree* prelimDataTree = MakePrelimDataTree(run, fin, fstart, fstart + groupfiles);
+      rootFile->cd("/");
+      prelimDataTree->Write("Data", TObject::kOverwrite);
+      rootFile->Save();
+      rootFile->Close();
+    }
 }
