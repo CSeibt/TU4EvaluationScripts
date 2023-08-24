@@ -2,6 +2,8 @@
 #include <dirent.h>
 
 #define nentriesMAX 3000000000
+#define includePileupEvents false
+#define includeSaturationEvents false
 
 vector<FILE*> GetInputFiles(TString input)
 {
@@ -91,14 +93,12 @@ TTree* MakePrelimDataTree(TString run, vector<FILE*> fin, int finstart = 0, int 
     Bool_t saturation = false, pileup = false, ADCout=false;
     ULong64_t LostTrig[numchannels], TotTrig[numchannels];
     ULong64_t timeLast[numchannels];
-    Long64_t  EnergyDepLast[numchannels];
     ULong64_t timeAdopt=0;
     
     TString caenFileName;
 
     //int mirror=1;
     int maxentries = 0;
-    double channelRealTime[numchannels];
     long int linesRead[numchannels];
 
     TObjString *info;
@@ -110,8 +110,6 @@ TTree* MakePrelimDataTree(TString run, vector<FILE*> fin, int finstart = 0, int 
 	// Variable initialization.
     for (i=0;i<numchannels;i++) {
         timeLast[i] = mintime*2.5e8;
-		EnergyDepLast[i] = 0.;
-		channelRealTime[i] = 0.;
 		linesRead[i] = 0;
         num_time_jumps[i] = 0;
         LostTrig[i] = 0;
@@ -177,10 +175,10 @@ TTree* MakePrelimDataTree(TString run, vector<FILE*> fin, int finstart = 0, int 
 				detW[nentries] 		= detW[nentriesMAX-1-filen];
 				adcW[nentries] 		= adcW[nentriesMAX-1-filen];
 				pileupW[nentries] 	= pileupW[nentriesMAX-1-filen];
-                saturationW[nentries] 	= saturationW[nentriesMAX-1-filen];
+				saturationW[nentries] 	= saturationW[nentriesMAX-1-filen];
 				extrasW[nentries]	= extrasW[nentriesMAX-1-filen];
 				linesRead[filen]++;
-				nentries ++ ;
+				nentries ++;
 			}
 		}
 		//cout << "N: " << nentries << endl;
@@ -190,7 +188,7 @@ TTree* MakePrelimDataTree(TString run, vector<FILE*> fin, int finstart = 0, int 
 			timeAdoptW[nentriesMAX-1-filen] = 0;
 			readTimeTag[0] 		= 0;
 			
-			cout << "Reading data from file... " << endl;
+			cout << "Reading data from file " << filen << "... " << endl;
 			// Read in listmode file, line by line.
 			while (fread(&boardN, 1, sizeof(boardN), fin.at(filen)) 
 					    &&fread(&channelN, 1, sizeof(channelN), fin.at(filen)) 
@@ -203,19 +201,27 @@ TTree* MakePrelimDataTree(TString run, vector<FILE*> fin, int finstart = 0, int 
 				fread(&samples ,numSamples, sizeof(samples), fin.at(filen));
 				//cout << numSamples<< endl;
 				
-				
+				// write event data into temp variables
 				if(channelN<8 && channelN>=0){
 				    timeAdoptW[nentries]	= readTimeTag[0];
 				    detW[nentries] 		= det_ch[channelN];
 				    adcW[nentries] 		= readEnergy[0] & 32767;
 				    saturationW[nentries]   = (readExtras[0] & 1024) / 1024;
-                    pileupW[nentries]   = (readExtras[0] & 32768) / 32768;
+				    pileupW[nentries]   = (readExtras[0] & 32768) / 32768;
 				    extrasW[nentries]	= readExtras[0];
 				    linesRead[filen]++;
+				    
+				    // optionally skip pileup and saturation events
+				    if ((!includePileupEvents && pileupW[nentries])
+				     || (!includeSaturationEvents && saturationW[nentries]))
+				    {
+					continue;
+				    }
 				    //if(nentries<100){ cout<< channelN << " " << readExtras[0] << " " <<  (readExtras[0] & 32768) / 32768 << endl;}
 				    //if(total_number_events<1000000 && (channelN == 0)){cout << boardN << " " << channelN  << " " << timeAdoptW[nentries]  <<" " << adcW[nentries]  <<endl;}
 				    
-				    if (nentries < nentriesMAX-1-numchannels){
+				    if (nentries < nentriesMAX-1-numchannels)
+				    {
 					    nentries ++ ;
 				    } else {
 					    cout << "!!!! nentries= " << nentries << " > " << nentriesMAX-numchannels << "  TEMP array is too small!!!!" << endl;
@@ -287,13 +293,13 @@ TTree* MakePrelimDataTree(TString run, vector<FILE*> fin, int finstart = 0, int 
     return Data;
 }
 
-void MakeRawTree(
+void MakeRawTreeGroupFiles(
     TString run = "run001",
     TString folder = "/ZIH.fast/users/felsdaq/TUBunker/TU5/TU5_TU4_230816_As/DAQ/"  //Path of the .bin file which shall be evaluated
     //TString folder = "/home/hans/Uni/EC/TU5_TU4_coincidence/DAQ/"  //Path of the .bin file which shall be evaluated
 )
 {
-    int groupfiles = 4;
+    int groupfiles = 1;
     TString suffix = "/RAW/";
     TString input = folder + run + suffix;
     cout << "input: " << input << endl;
@@ -311,4 +317,26 @@ void MakeRawTree(
       rootFile->Save();
       rootFile->Close();
     }
+}
+
+void MakeRawTree(
+    TString run = "run001",
+    TString folder = "/ZIH.fast/users/felsdaq/TUBunker/TU5/TU5_TU4_230816_As/DAQ/"  //Path of the .bin file which shall be evaluated
+    //TString folder = "/home/hans/Uni/EC/TU5_TU4_coincidence/DAQ/"  //Path of the .bin file which shall be evaluated
+)
+{
+    TString suffix = "/RAW/";
+    TString input = folder + run + suffix;
+    cout << "input: " << input << endl;
+
+    vector<FILE*> fin = GetInputFiles(input);
+    
+    TString filename = run+".root";
+    TFile *rootFile = new TFile(filename,"RECREATE");
+    cout << "created new file " << endl;
+    TTree* prelimDataTree = MakePrelimDataTree(run, fin);
+    rootFile->cd("/");
+    prelimDataTree->Write("Data", TObject::kOverwrite);
+    rootFile->Save();
+    rootFile->Close();
 }
