@@ -244,10 +244,10 @@ TFile* CreateNewFile(
 
 void SetCalibrationHardCoded()
 {
-	Double_t TU5_p0 = 0.0498342;
-	Double_t TU5_p1 = 0.0098035;
-	Double_t TU4_p0 = 3.30397;
-	Double_t TU4_p1 = 0.328578;
+	Double_t TU5_p0 = 0.0522504;
+	Double_t TU5_p1 = 0.00980839;
+	Double_t TU4_p0 = 3.00634;
+	Double_t TU4_p1 = 0.328569;
 	calibration_function[0] = new TF1("fCalTU5", "pol1");
 	calibration_function[0]->SetParameters(TU5_p0, TU5_p1);
 	calibration_function[1] = new TF1("fCalTU4", "pol1");
@@ -256,7 +256,7 @@ void SetCalibrationHardCoded()
 
 
 void MakeTimeDiffTree(	
-	TString run = "run001"
+	TString run = "run001_0"
 
 ){
 	TTree* oldTree = GetSortedTree(run);
