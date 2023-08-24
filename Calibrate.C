@@ -216,13 +216,12 @@ void CalibrateTU5_76As(TH1D* hCh)
 // Includes all hard-coded preferences: ROIs, guessed calibration factor
 {
     ClearROIs();
-    AddROI(4.47, 3.5, 4.0, 4.5, 4.5);
-    //AddROI(37.255, 36.8, 36.8, 38.3, 40);
-    AddROI(80.9979, 60, 80, 82, 100);
+    AddROI(10.5437, 10, 10, 11, 11);
+    AddROI(11.7262, 11.2, 11.2, 12.2, 12.2);
     PrintROIs();
 
     // guess calibration
-    Double_t guess_p1 = 0.0099;
+    Double_t guess_p1 = 0.00985;
 
     Calibration(hCh, guess_p1, "TU5");
 }
@@ -232,14 +231,14 @@ void CalibrateTU4_76As(TH1D* hCh)
 // Includes all hard-coded preferences: ROIs, guessed calibration factor, detector name
 {
     ClearROIs();
-    AddROI(559.10, 1670, 1670, 1700, 1700);
+    AddROI(559.10, 551, 551, 561, 561);
     //AddROI(657.05, 1950, 1950, );
-    AddROI(2655.30, 8050, 8050, 8090, 8090);
-    AddROI(2669.7, 8100, 8100, 8130, 8130);
+    AddROI(2655.30, 2640, 2640, 2662, 2662);
+    AddROI(2669.7, 2662, 2662, 2690, 2690);
     PrintROIs();
 
     // guess calibration
-    Double_t guess_p1 = 0.33;
+    Double_t guess_p1 = 0.329;
 
     Calibration(hCh, guess_p1, "TU4");
 }
@@ -264,7 +263,7 @@ void Calibrate(
     TString selection = "det==0 && pileup==0 && saturation==0";
     data->Draw(varexp.Data(), selection.Data(), "goff");
     // calibration
-    CalibrateTU5_133Ba(hChTU5);
+    CalibrateTU5_76As(hChTU5);
 
     // TU4 calibration
     // Get uncalibrated adc histograms
@@ -274,5 +273,5 @@ void Calibrate(
     selection = "det==1 && pileup==0 && saturation==0";
     data->Draw(varexp.Data(), selection.Data(), "goff");
     // calibration
-    CalibrateTU4_133Ba(hChTU4);
+    CalibrateTU4_76As(hChTU4);
 }
