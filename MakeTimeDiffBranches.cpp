@@ -65,7 +65,7 @@ struct Event {
 		{}
 	Short_t Adc;
 	UChar_t Det;
-	ULong_t Time;
+	ULong64_t Time;
 	Bool_t Pileup;
 	Bool_t Saturation;
 	// --- Defined ĺater
@@ -73,10 +73,10 @@ struct Event {
 	Short_t EnergyDepAfter0;
 	Short_t EnergyDepBefore1;
 	Short_t EnergyDepAfter1;
-	Long_t TimeDiffBefore0;
-	Long_t TimeDiffAfter0;
-	Long_t TimeDiffBefore1;
-	Long_t TimeDiffAfter1;
+	Long64_t TimeDiffBefore0;
+	Long64_t TimeDiffAfter0;
+	Long64_t TimeDiffBefore1;
+	Long64_t TimeDiffAfter1;
 };
 
 vector<Event>* TreeEntries(TFile* File) // Als CPP-Referenz zurück geben (siehe Wikipedia)
@@ -221,11 +221,11 @@ TFile* CreateNewFile(
     DataNew->Branch("adc",    &CurrentEvent.Adc,   "ch/S");
     DataNew->Branch("pileup",&CurrentEvent.Pileup,"pileup/O");
     DataNew->Branch("saturation",&CurrentEvent.Saturation,"saturation/O");
-    DataNew->Branch("time",&CurrentEvent.Time,"time/g");
-	DataNew->Branch("TimeDiff_before0", &CurrentEvent.TimeDiffBefore0, "TimeDiff_before0/G");
-	DataNew->Branch("TimeDiff_after0", &CurrentEvent.TimeDiffAfter0, "TimeDiff_after0/G");
-	DataNew->Branch("TimeDiff_before1", &CurrentEvent.TimeDiffBefore1, "TimeDiff_before1/G");
-	DataNew->Branch("TimeDiff_after1", &CurrentEvent.TimeDiffAfter1, "TimeDiff_after1/G");
+    DataNew->Branch("time",&CurrentEvent.Time,"time/l");
+	DataNew->Branch("TimeDiff_before0", &CurrentEvent.TimeDiffBefore0, "TimeDiff_before0/L");
+	DataNew->Branch("TimeDiff_after0", &CurrentEvent.TimeDiffAfter0, "TimeDiff_after0/L");
+	DataNew->Branch("TimeDiff_before1", &CurrentEvent.TimeDiffBefore1, "TimeDiff_before1/L");
+	DataNew->Branch("TimeDiff_after1", &CurrentEvent.TimeDiffAfter1, "TimeDiff_after1/L");
 	DataNew->Branch("EnergyDep_before0", &CurrentEvent.EnergyDepBefore0, "EnergyDep_before0/S");
 	DataNew->Branch("EnergyDep_after0", &CurrentEvent.EnergyDepAfter0, "EnergyDep_after0/S");
 	DataNew->Branch("EnergyDep_before1", &CurrentEvent.EnergyDepBefore1, "EnergyDep_before1/S");
@@ -246,8 +246,9 @@ TFile* CreateNewFile(
 
 
 void MakeTimeDiffBranches(){
-	TString Run = "run003";
-
+	TString Run = "run004";
+	TStopwatch* Stopwatch = new TStopwatch();
+	Stopwatch->Start(true);
 	TFile* OldFile = File(Run);
 	if (!OldFile || OldFile->IsZombie()) {return; } 
 	//Do all functions implemented above
@@ -260,4 +261,6 @@ void MakeTimeDiffBranches(){
 	
 	NewFile->Write();
 	cout << "New root file saved" << endl;
+	Stopwatch->Stop();
+	cout << "Total time = " << Stopwatch->RealTime() << " *** CPU time = " << Stopwatch->CpuTime() << endl;
 }

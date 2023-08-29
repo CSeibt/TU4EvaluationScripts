@@ -203,7 +203,7 @@ void MakeHist_230526(){
     gStyle->SetStripDecimals(kFALSE);
 
     //Variables
-    TString run = "run003";			//run
+    TString run = "run004";			//run
     Int_t TU5 = 0;					//TU5 (X-ray detector)
     Int_t TU4 = 1;					//TU4 (Ge detector)
     Int_t thrTimediff = 5.0E6;	//time difference threshold

@@ -454,8 +454,9 @@ TFile* CreateNewFile(
 
 
 void MakeTimeDiffBranches_230718(){
-	TString Run = "run003";
-
+	TString Run = "run004";
+	TStopwatch* Stopwatch = new TStopwatch();
+	Stopwatch->Start(true);
 	TFile* OldFile = File(Run);
 	if (!OldFile || OldFile->IsZombie()) {return; } 
 	//Do all functions implemented above
@@ -468,4 +469,6 @@ void MakeTimeDiffBranches_230718(){
 	
 	NewFile->Write();
 	cout << "New root file saved" << endl;
+	Stopwatch->Stop();
+	cout << "Total time = " << Stopwatch->RealTime() << " *** CPU time = " << Stopwatch->CpuTime() << endl;
 }

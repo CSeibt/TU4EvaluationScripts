@@ -49,8 +49,8 @@ TFile* File(
     TString prefixPath = "../"
 ){
 	TString folder = "root/";//"";
-	TString list = "DataR_";
-    TString Suffix = ".bin";
+	TString list = "Data_";
+    TString Suffix = "_coincidence";
     
     // Variable definitions.
     TString listModeSuffix = list+run+Suffix;
@@ -59,7 +59,7 @@ TFile* File(
     
     // Open ROOT file
     TFile* rootFile = new TFile(prefix+listModeSuffix+".root","UPDATE");
-    //if (rootFile->IsZombie()) return;
+    if (rootFile->IsZombie()) return NULL;
     
 	return rootFile;
 	}
@@ -146,32 +146,37 @@ void DrawHist(){
     gStyle->SetStripDecimals(kFALSE);
 
     //Variables
-    TString run1 = "run038";	
-    TString run2 = "run039";												
+    TString run1 = "run003";	
+    TString run2 = "run004";												
 			
-    TString path = "TU5/Paper/";									
+    TString path = "../Test_230526/";									
     
-    TFile* file1 = File(run1);
-    TFile* file2 = File(run2);
-
+    TFile* file1 = File(run1, path);
+    TFile* file2 = File(run2, path);
+	
+	if (file1 == NULL || file2 == NULL){return;}
 
 
     //HistList(file);
     
     //Histogram Names
-    TString histoName = "TU5 adc";
+    TString histoName1 = "TU5adc";
+    TString histoName2 = "TU4adc";
 //	TString histoName2 = "histo_veto_TU5_Sz1";
     
     //Vectors of histogram names (for DrawHistograms)
-    vector<TString> histograms = {histoName};
+    vector<TString> histograms1 = {histoName1};
+    vector<TString> histograms2 = {histoName2};
 //	vector<TString> histograms2 = {histoName2};
     
     //Vector of vectors of histogram names (for DrawCanvases)
 //	vector<vector<TString>> hists1 = {histograms};
     
     //DrawHistograms executes
-    TCanvas* c1 = DrawHistograms(file1, histograms, run1);
-    TCanvas* c2 = DrawHistograms(file2, histograms, run2);
+    TCanvas* c1 = DrawHistograms(file1, histograms1, run1);
+    TCanvas* c2 = DrawHistograms(file2, histograms1, run2);
+    TCanvas* c3 = DrawHistograms(file1, histograms2, run1);
+    TCanvas* c4 = DrawHistograms(file2, histograms2, run2);
     //TCanvas* c2 = DrawHistograms(file, histograms2);
     
     //Draw Canavses execute
