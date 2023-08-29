@@ -376,7 +376,7 @@ TF1* Calibrations::CalibrateEfficiency(){
 }
 
 /* Main function */
-void MakeCalib_230711(){
+void MakeCalib(){
 	//Runs ...
 	TString Run133Ba = "run003";
 	TString Run57Co = "run004";
