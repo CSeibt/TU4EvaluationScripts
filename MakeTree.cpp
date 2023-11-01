@@ -1,3 +1,12 @@
+/*
+Script to create a root file out of raw data
+Adjusted for TU7 (ch 0) and TU5 (ch 2).
+Directories set for Seppl's Laptop.
+
+### CHECK DIRECTORIES ###
+*/
+
+
 #include <iostream>
 using namespace std;
 #include <fstream>
@@ -36,7 +45,7 @@ using namespace std;
 
 #define ROIS 4
 #define MAXRONLINES 10000000
-#define nentriesMAX 2000000000
+#define nentriesMAX 200000000
 
 void BinToRoot(
 	//TString folder = "/cephfs/projekte/astro/Felsenkeller/3He+4He/2ndCampaign/Analysis/TUBunker/Christoph/Runs/Run004/",
@@ -49,14 +58,14 @@ void BinToRoot(
 		
 	//Folders separated into directory + run + folder in run (RAW)
 	TString prefixPath = "";
-	TString folder = "/ZIH.fast/users/felsdaq/TUBunker/TU5/TU5_TU4_230524_coincidence/DAQ/";  //Path of the .bin file which shall be evaluated
+	TString folder = "/home/chris/Projects/TU5TU7/Experiments/Data/Raw/";  //Path of the .bin file which shall be evaluated
 	TString suffix = "/RAW/";
-
-    // Channel  0 = TU5
+	TString target_dir = "/home/chris/Projects/TU5TU7/Experiments/Data/Root/";
+    // Channel  0 = TU7
     // Channel  1 =  
-    // Channel  2 = Sz1
+    // Channel  2 = TU5
     // Channel  3 = 
-    // Channel  4 = Sz2 
+    // Channel  4 = 
     // Channel  5 = 
     // Channel  6 = 
     // Channel  7 = 
@@ -66,16 +75,16 @@ void BinToRoot(
     int total_number_events = 0;
 
     const int numchannels = 8;
-    //const int numfiles = 1;
-    //const int CentralChannel = 0; //Kapsel G = 6
+    const int numfiles = 1;
+    const int CentralChannel = 0; //Kapsel G = 6
     const int max_num_jumps = 10;
 
     // Variable definitions.
     
-    TString detName[8]= {"TU5","TU4","","","","","",""};
+    TString detName[8]= {"TU7","TU5","","","","","",""};
     unsigned char det_ch[8] = {0,3,1,4,2,5,6,7}; // Reordering of detector channels: TU5 = det0, TU4=det1, Sz2=det2 etc.
     
-    TString input = prefixPath + folder + run + suffix;
+    TString input = prefixPath + folder + run + "/";
     TStopwatch *rootTime = new TStopwatch();
     int i,j,k,m,p,line=0,first,second;
     rootTime->Start();
@@ -125,7 +134,7 @@ void BinToRoot(
     int nentries=0;
     int 	*index 		= new int[nentriesMAX];
     uint64_t 	*timeAdoptW 	= new uint64_t[nentriesMAX];
-    uint16_t 	*detW		= new uint8_t[nentriesMAX];
+    uint8_t 	*detW		= new uint8_t[nentriesMAX];
     int16_t 	*adcW		= new int16_t[nentriesMAX];
     uint16_t 	*saturationW	= new uint16_t[nentriesMAX];
     uint16_t 	*pileupW	= new uint16_t[nentriesMAX];
@@ -148,7 +157,7 @@ void BinToRoot(
     while ((de_bin = readdir(dr_bin)) != NULL){ 
 	    string s_bin = de_bin->d_name;
 	    //check in which file the letters "b", "i" and "n" occur
-	    if(s_bin.find('b') != std::string::npos && s_bin.find('i') != std::string::npos && s_bin.find('n') != std::string::npos){
+	    if(s_bin.find('B') != std::string::npos && s_bin.find('I') != std::string::npos && s_bin.find('N') != std::string::npos){
 	      binfiles[b] = de_bin->d_name;
 	      b++;
 	      total_number_files++;
@@ -161,7 +170,7 @@ void BinToRoot(
     
     closedir(dr_bin);
     cout << " " << endl;
-    cout << "Following .bin files were found:" << endl;
+    cout << "Following .BIN files were found:" << endl;
     
     for(int i=0;i<total_number_files;i++){
       cout << binfiles[i] << endl;
@@ -175,15 +184,14 @@ void BinToRoot(
     //Create run folder if it does not exist and create a ROOT file.
     struct stat st = {0};
 
-	if (stat("Test_230526/"+run+"/root", &st) == -1) {
-		int directory1 = mkdir("../Test_230526/"+run, 0777);
-		int directory2 = mkdir("../Test_230526/"+run+"/root", 0777);
+	if (stat(target_dir + run + "/", &st) == -1) {
+		int directory1 = mkdir(target_dir + run, 0777);
 		cout << "Created new directory" << endl;
 	}
-    TFile *rootFile = new TFile("../Test_230526/" + run + "/root/"+binfiles[0]+"_without_timediff.root","RECREATE");
+    TFile *rootFile = new TFile(target_dir + run + "/" + run + "_without_timediff.root","RECREATE");
 	cout << "created new file " << endl;
     // Plant the data tree.
-    TTree *Data = new TTree("Data","TU5 data");
+    TTree *Data = new TTree("Data","Data");
     Data->Branch("det",   &det ,   "det/s");
     Data->Branch("adc",    &adc,   "ch/S");
     Data->Branch("pileup",&pileup,"pileup/O");
@@ -196,6 +204,7 @@ void BinToRoot(
 
 
 	//
+    uint16_t headerN;   // UM5960_Compass_UserManual_rev20.pdf p. 67 this has been added!
     int16_t boardN;
     int16_t channelN;
     
@@ -214,8 +223,7 @@ void BinToRoot(
     int16_t samples;
    
     int NrOfFilesEnded = 0;
-    
-    
+ 
     // General cosmetics.
     gStyle->SetOptStat(1001111);
     gStyle->SetOptFit(0);
@@ -255,6 +263,7 @@ void BinToRoot(
     // Attention!!! The input_ch will be converted
     for (i=0;i<total_number_files;i++) {
 		caenFileName = input + binfiles[i];
+		cout << "Open " << caenFileName << endl;
         fin[i] = fopen(caenFileName, "r");
         if (!fin[i]) {
              cout << "Error when opening file " << caenFileName << endl;
@@ -289,28 +298,34 @@ void BinToRoot(
 			timeAdoptW[nentriesMAX-1-filen] = 0;
 			readTimeTag[0] 		= 0;
 			
+			// Read Header of bin file. Relevant for CoMPASS 2.x.x DAQ-Software
+  		    if (det==0) {
+     		   fread(&headerN, 1, sizeof(headerN), fin[det]);
+        		//cout << "headerN= " << headerN << " headerN & 0 = " << (headerN & 0) << endl;
+      		}
+
+			
 			cout << "Reading data from file... " << endl;
 			// Read in listmode file, line by line.
-			while (fread(&boardN, 1, sizeof(boardN), fin[filen]) 
-					    &&fread(&channelN, 1, sizeof(channelN), fin[filen]) 
-					    && (sizeof(readTimeTag) == fread(&readTimeTag, 1, sizeof(readTimeTag), fin[filen]))) 
+			while (fread(&boardN, 1, sizeof(boardN), fin[det]) 
+					    &&fread(&channelN, 1, sizeof(channelN), fin[det]) 
+					    && (sizeof(readTimeTag) == fread(&readTimeTag, 1, sizeof(readTimeTag), fin[det]))) 
 					    {	
 				
-				fread(&readEnergy, 1, sizeof(readEnergy), fin[filen]);
-				fread(&readExtras, 1, sizeof(readExtras), fin[filen]);
-				fread(&numSamples, 1, sizeof(numSamples), fin[filen]);
-				fread(&samples ,numSamples, sizeof(samples), fin[filen]);
+				fread(&readEnergy, 1, sizeof(readEnergy), fin[det]);
+				fread(&readExtras, 1, sizeof(readExtras), fin[det]);
+				//fread(&numSamples, 1, sizeof(numSamples), fin[det]);
+				// fread(&samples ,numSamples, sizeof(samples), fin[det]);
 				//cout << numSamples<< endl;
 				
-				
 				if(channelN<8 && channelN>=0){
+                   
 				    timeAdoptW[nentries]	= readTimeTag[0];
 				    detW[nentries] 		= det_ch[channelN];
 				    adcW[nentries] 		= readEnergy[0] & 32767;
-				    saturationW[nentries]   = (readExtras[0] & 1024) / 1024;
-                    pileupW[nentries]   = (readExtras[0] & 32768) / 32768;
+				    pileupW[nentries]   = (readExtras[0] & 32768) / 32768;
 				    extrasW[nentries]	= readExtras[0];
-				    linesRead[filen]++;
+				    linesRead[det]++;
 				    //if(nentries<100){ cout<< channelN << " " << readExtras[0] << " " <<  (readExtras[0] & 32768) / 32768 << endl;}
 				    //if(total_number_events<1000000 && (channelN == 0)){cout << boardN << " " << channelN  << " " << timeAdoptW[nentries]  <<" " << adcW[nentries]  <<endl;}
 				    
@@ -320,6 +335,7 @@ void BinToRoot(
 					    cout << "!!!! nentries= " << nentries << " > " << nentriesMAX-numchannels << "  TEMP array is too small!!!!" << endl;
 				    }
 				}
+				 
 				total_number_events ++;
 			} // while ()
 			
@@ -435,7 +451,7 @@ void BinToRoot(
     //Put realtime, event number and lost eventnumber information in UserInfo of the tree
     TString info_string;
     for (m=0;m<numchannels;m++) {
-        info_string = Form("%s_Real_time: %f s,_Tot_events: %lld ,_Lost_events: %lld", detName[m].Data(), channelRealTime[m], TotTrig[m]*1024, LostTrig[m]*1024);
+        info_string = Form("%s_Real_time: %f s,_Tot_events: %lu ,_Lost_events: %lu", detName[m].Data(), channelRealTime[m], TotTrig[m]*1024, LostTrig[m]*1024);
         info = new TObjString(info_string);
         Data->GetUserInfo()->Add(info);
     }
@@ -579,7 +595,7 @@ void BinToRoot(
 }
 
 
-void MakeTree_230526(){
+void MakeTree(){
 	//Main function
 	TString run = "run003";				//run id
 	BinToRoot(run, false, false);

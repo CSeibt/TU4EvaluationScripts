@@ -45,20 +45,12 @@ The 'DrawHist'-function acting as a main function. Here you can create the strin
 
 //Open the root File of interest
 TFile* File(
-    TString run = "run021",
-    TString prefixPath = "../"
+    TString run = "run021"
 ){
-	TString folder = "root/";//"";
-	TString list = "Data_";
-    TString Suffix = "_coincidence";
-    
-    // Variable definitions.
-    TString listModeSuffix = list+run+Suffix;
-    TString prefix = prefixPath + run + "/" + folder;
-
-    
+	TString folder = "/home/chris/Projects/TU5TU7/Experiments/Data/Root/" + run + "/";
     // Open ROOT file
-    TFile* rootFile = new TFile(prefix+listModeSuffix+".root","UPDATE");
+	//TFile* rootFile = new TFile(folder+"Data_"+run+"_coincidence.root","UPDATE");		//For Coincicdence files
+	TFile* rootFile = new TFile(folder + run +"_without_timediff.root","UPDATE");		//Without coincidence!
     if (rootFile->IsZombie()) return NULL;
     
 	return rootFile;
@@ -147,21 +139,21 @@ void DrawHist(){
 
     //Variables
     TString run1 = "run003";	
-    TString run2 = "run004";												
+    //TString run2 = "run004";												
 			
-    TString path = "../Test_230526/";									
+    //TString path = "../Test_230526/";									
     
-    TFile* file1 = File(run1, path);
-    TFile* file2 = File(run2, path);
+    TFile* file1 = File(run1);
+    //TFile* file2 = File(run2, path);
 	
-	if (file1 == NULL || file2 == NULL){return;}
+	if (file1 == NULL){return;}			// || file2 == NULL
 
 
     //HistList(file);
     
     //Histogram Names
     TString histoName1 = "TU5adc";
-    TString histoName2 = "TU4adc";
+    TString histoName2 = "TU7adc";
 //	TString histoName2 = "histo_veto_TU5_Sz1";
     
     //Vectors of histogram names (for DrawHistograms)
@@ -174,9 +166,9 @@ void DrawHist(){
     
     //DrawHistograms executes
     TCanvas* c1 = DrawHistograms(file1, histograms1, run1);
-    TCanvas* c2 = DrawHistograms(file2, histograms1, run2);
+    //TCanvas* c2 = DrawHistograms(file2, histograms1, run2);
     TCanvas* c3 = DrawHistograms(file1, histograms2, run1);
-    TCanvas* c4 = DrawHistograms(file2, histograms2, run2);
+    //TCanvas* c4 = DrawHistograms(file2, histograms2, run2);
     //TCanvas* c2 = DrawHistograms(file, histograms2);
     
     //Draw Canavses execute

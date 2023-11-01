@@ -36,9 +36,10 @@ typedef vector<Int_t> EThr;
 TFile* GetInputFile(
     TString run = "run001"
 ){
-	TString folder = "../Test_230526/"+run+"/root/";
+	TString folder = "/home/chris/Projects/TU5TU7/Experiments/Data/Root/" + run + "/";
     // Open ROOT file
-    TFile* rootFile = new TFile(folder+"Data_"+run+"_coincidence.root","UPDATE");
+    //TFile* rootFile = new TFile(folder+"Data_"+run+"_coincidence.root","UPDATE");		//For Coincicdence files
+	TFile* rootFile = new TFile(folder + run +"_without_timediff.root","UPDATE");		//Without coincidence!
     //if (rootFile->IsZombie()) return;
     
 	return rootFile;
@@ -141,7 +142,7 @@ TH1D* Histogram(
 	Int_t det2 = 1
 ){
 // Create a histogram of one of the types {"adc", "Time", "TimeDiff"}
-	vector<TString> detectors = {"TU5","TU4"};    				//Detector names
+	vector<TString> detectors = {"TU7","TU5"};    				//Detector names
 	
 	Double_t nch = 16384;
 	
@@ -162,7 +163,7 @@ TH1D* Histogram(
 		*/
 		//Fill Histograms with data
 		TH1D* histo = new TH1D(histname, detectors[det]+" signal rate; time / s; Counts", 90000, 0, 90000);							//Rate Histogram
-		data->Draw("time/1E12>>"+histname, attributes, "goff");		//Time - Events of det
+		data->Draw("Time/1E12>>"+histname, attributes, "goff");		//Time - Events of det
 		return histo;
 	}
 	else if (histtype=="TimeDiff"){
@@ -196,16 +197,16 @@ TH1D* HistCanvas(
 	return histogram;
 }
 
-void MakeHist_230526(){
+void MakeHist(){
 	//General cosmetics
 	gStyle->SetOptStat(1001111);
     gStyle->SetOptFit(0);
     gStyle->SetStripDecimals(kFALSE);
 
     //Variables
-    TString run = "run004";			//run
-    Int_t TU5 = 0;					//TU5 (X-ray detector)
-    Int_t TU4 = 1;					//TU4 (Ge detector)
+    TString run = "run003";			//run
+    Int_t TU7 = 0;					//TU7 (X-ray detector)
+    Int_t TU5 = 1;					//TU5 (Ge detector)
     Int_t thrTimediff = 5.0E6;	//time difference threshold
     Int_t thrEnergy = 1;			//energy threshold (pile-up)
     Int_t nch = 16384;
@@ -217,27 +218,27 @@ void MakeHist_230526(){
 	vector<bool> attributes = {false, false, false, false, false};
     
 	
-	TString options1 = OptString(0, attributes);
-	TString options2 = OptString(1, attributes);
+	TString options1 = OptString(TU7+20480, attributes);
+	TString options2 = OptString(TU5+20480, attributes);
 	
 	vector<bool> CoinAttributes = {false, false, false, true, false};
-	TString TU5CoinOptions = OptString(TU5, CoinAttributes, TU4);
-	TString TU4CoinOptions = OptString(TU4, CoinAttributes, TU5);
+	TString TU7CoinOptions = OptString(TU7, CoinAttributes, TU5);
+	TString TU5CoinOptions = OptString(TU5, CoinAttributes, TU7);
 	 
 
 	
-	TH1D* histogram_adc1 = HistCanvas(data, "TU5adc", "adc", options1, TU5, TU4, true);
-	TH1D* histogram_time1 = HistCanvas(data, "histo_rate_TU5", "time", options1, TU5, TU4, true);
+	TH1D* histogram_adc1 = HistCanvas(data, "TU7adc", "adc", options1, TU7, TU5, true);
+	TH1D* histogram_time1 = HistCanvas(data, "histo_rate_TU7", "time", options1, TU7, TU5, true);
 	
-	TH1D* histogram_adc2 = HistCanvas(data, "TU4adc", "adc", options2, TU4, TU5, true);
-	TH1D* histogram_time2 = HistCanvas(data, "histo_rate_TU4", "time", options2, TU4, TU5, true);
+	TH1D* histogram_adc2 = HistCanvas(data, "TU5adc", "adc", options2, TU5, TU7, true);
+	TH1D* histogram_time2 = HistCanvas(data, "histo_rate_TU5", "time", options2, TU5, TU7, true);
 	
-	TH1D* TimeDiff01 = HistCanvas(data, "TU5TU4TimeDiff", "TimeDiff", options1, TU5, TU4, true);
-	TH1D* TimeDiff02 = HistCanvas(data, "TU4TU5TimeDiff", "TimeDiff", options2, TU4, TU5, true);
+	//TH1D* TimeDiff01 = HistCanvas(data, "TU7TU5TimeDiff", "TimeDiff", options1, TU7, TU5, true);
+	//TH1D* TimeDiff02 = HistCanvas(data, "TU5TU7TimeDiff", "TimeDiff", options2, TU5, TU7, true);
 	
 	
-	//TH1D* CoincidenceTU5 = HistCanvas(data, "TU5adcCoincidence", "adc", TU5CoinOptions, TU5, TU4, true);
-	//TH1D* CoincidenceTU4 = HistCanvas(data, "TU4adcCoincidence", "adc", TU4CoinOptions, TU4, TU5, true);
+	//TH1D* CoincidenceTU7 = HistCanvas(data, "TU7adcCoincidence", "adc", TU7CoinOptions, TU7, TU5, true);
+	//TH1D* CoincidenceTU5 = HistCanvas(data, "TU5adcCoincidence", "adc", TU5CoinOptions, TU5, TU7, true);
 	
 	
 	EThr Xrays1 = {417, 597};
@@ -246,8 +247,8 @@ void MakeHist_230526(){
 	
 	vector<EThr> Ba133Xrays = {Xrays1};
 	
-	//TString XrayCoinOptions = CoincidenceOptString(TU4, TU5, thrTimediff, Ba133Xrays);
-	//TH1D* XrayCoincidenceTU4 = HistCanvas(data, "TU4_BaXrayCoincidence", "adc", XrayCoinOptions, TU4, TU5);
-	//XrayCoincidenceTU4->Write();
+	//TString XrayCoinOptions = CoincidenceOptString(TU5, TU7, thrTimediff, Ba133Xrays);
+	//TH1D* XrayCoincidenceTU5 = HistCanvas(data, "TU5_BaXrayCoincidence", "adc", XrayCoinOptions, TU5, TU7);
+	//XrayCoincidenceTU5->Write();
 	
 }

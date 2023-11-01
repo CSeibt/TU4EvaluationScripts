@@ -34,10 +34,11 @@ using namespace std;
 TFile* GetInputFile(
     TString run = "run001"
 ){
-	TString folder = "../Test_230526/"+run+"/root/";
+	TString folder = "/home/chris/Projects/TU5TU7/Experiments/Data/Root/" + run + "/";
     // Open ROOT file
-    TFile* rootFile = new TFile(folder+"Data_"+run+"_coincidence.root","UPDATE");
-    
+    //TFile* rootFile = new TFile(folder+"Data_"+run+"_coincidence.root","UPDATE");		//For Coincicdence files
+	TFile* rootFile = new TFile(folder + run +"_without_timediff.root","UPDATE");		//Without coincidence!
+
 	return rootFile;
 }
 
@@ -379,10 +380,11 @@ TF1* Calibrations::CalibrateEfficiency(){
 void MakeCalib(){
 	//Runs ...
 	TString Run133Ba = "run003";
-	TString Run57Co = "run004";
+	//TString Run57Co = "run004";
 	//Detectors ...
-	TString TU4Hist = "TU4adc";
+	TString TU7Hist = "TU7adc";
 	TString TU5Hist = "TU5adc";
+	/*
 	//TU4 peak vectors:
 	vector<Short_t> TU4Ba1 = {245};
 	vector<Short_t> TU4Ba2 = {835};
@@ -401,7 +403,7 @@ void MakeCalib(){
 	TU4Peaks.push_back(new PeakInit(TU4Ba5, 4, 30, 383.8485, 0.0012, 676e6, 19e6));
 	TU4Peaks.push_back(new PeakInit(TU4Co1, 4, 30, 122.06065, 0.00012, 243e6, 4e6));
 	TU4Peaks.push_back(new PeakInit(TU4Co2, 4, 30, 136.47356, 0.00029, 304e5, 6e5));
-	
+	*/
 	
 	//TU5 peak vectors:
 	vector<Short_t> TU5Ba1 = {440, 475, 505, 540, 570};
@@ -429,12 +431,13 @@ void MakeCalib(){
 	TU5Peaks.push_back(new PeakInit(TU5Ba7, 15, 200, 34.9644, 0.0001, 130e7, 4e7));
 	TU5Peaks.push_back(new PeakInit(TU5Ba8, 15, 200, 35.822, 0.001, 265e6, 10e6));
 	TU5Peaks.push_back(new PeakInit(TU5Ba9, 20, 200, 80.9979, 0.0011, 249e7, 7e7));
-
+/*
 	TU5Peaks.push_back(new PeakInit(TU5Co1, 8, 80, 6.399, 0.016, 141e6, 6e6));
 	TU5Peaks.push_back(new PeakInit(TU5Co2, 8, 80, 7.0580, 0.0001, 168e5, 8e5));
 	TU5Peaks.push_back(new PeakInit(TU5Co3, 10, 100, 14.4129, 0.0006, 260e5, 6e5));
-	
+*/	
 	//Fit the peaks used for calibration by using the initial parameters listed above together with the measurement data (Adc Hist in file is necessary, use a MakeHist-file)
+/*
 	for (int i = 0; i < 5; i++){
 		TU4Peaks[i]->FitPeaks(Run133Ba, TU4Hist, false);
 		}	
@@ -446,30 +449,31 @@ void MakeCalib(){
 	TU4Calibration.CalibrateEnergy();
 	TU4Calibration.CalibrateResolution();
 	TU4Calibration.CalibrateEfficiency();
-	
+*/	
 	//Fit the peaks used for calibration by using the initial parameters listed above together with the measurement data (Adc Hist in file is necessary, use a MakeHist-file)
 	for (int i = 0; i < 9; i++){
 		TU5Peaks[i]->FitPeaks(Run133Ba, TU5Hist, false);
 		}	
-	for (int i = 9; i < 12; i++){
+/*	for (int i = 9; i < 12; i++){
 		TU5Peaks[i]->FitPeaks(Run57Co, TU5Hist, false);
 		}	
-	
+*/	
 	Calibrations TU5Calibration = Calibrations(TU5Peaks, "TU5");
 	TU5Calibration.CalibrateEnergy();
 	TU5Calibration.CalibrateResolution();
-	TU5Calibration.CalibrateEfficiency();
+//	TU5Calibration.CalibrateEfficiency();
 	
 	//Write the results into a calibration file:
 	TFile* CalibFile = new TFile("../Test_230526/Calibations.root","RECREATE");
 	cout << " *** " << endl;
+/*
 	TU4Calibration.EnergyCalibration->Write();
 	TU4Calibration.EnergyResolution->Write();
 	TU4Calibration.EfficiencyCalibration->Write();
-	
+*/	
 	TU5Calibration.EnergyCalibration->Write();
 	TU5Calibration.EnergyResolution->Write();
-	TU5Calibration.EfficiencyCalibration->Write();
+//	TU5Calibration.EfficiencyCalibration->Write();
 	
 	CalibFile->Write();
 	cout << "Calibration functions written into Calibration file" << endl;
