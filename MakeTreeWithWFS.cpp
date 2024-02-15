@@ -39,6 +39,37 @@ using namespace std;
 #define MAXRONLINES 10000000
 #define nentriesMAX 200000000
 
+vector<TString> GetFilenames(
+    TString target_dir,
+){
+    DIR *dr_bin = opendir(input); 
+    if (dr_bin == NULL)
+    { 
+        printf("Could not find any .bin files" ); 
+    } 
+  
+    while ((de_bin = readdir(dr_bin)) != NULL){ 
+	    string s_bin = de_bin->d_name;
+	    //check in which file the letters "b", "i" and "n" occur
+	    if(s_bin.find('B') != std::string::npos && s_bin.find('I') != std::string::npos && s_bin.find('N') != std::string::npos){
+	      binfiles.push_back(s_bin);
+	    }
+    }
+
+    int total_number_files = binfiles.size();
+    sort(binfiles.begin(), binfiles.end()); //sort the files in ascending order
+
+    cout << "Following .BIN files were found:" << endl;
+    
+    for(int i=0;i<total_number_files;i++){
+      cout << binfiles[i] << endl;
+    }
+    cout << " " << endl;
+
+    closedir(dr_bin);
+}
+
+
 void BinToRoot(
     TString run,
     bool hist,
@@ -84,17 +115,6 @@ void BinToRoot(
     cout << "filename: " << filename << endl;
     cout << "rootfilename: " << rootfilename << endl;
 
-
-    // Create new directory for the root files
-    struct stat st = {0};
-
-	if (stat(target_dir + run + "/", &st) == -1) {
-		int directory1 = mkdir(target_dir + run, 0777);
-		cout << "Created new directory" << endl;
-	}
-    TFile *rootFile = new TFile(target_dir + run + "/" + run + "_without_timediff.root","RECREATE");
-	cout << "created new file " << endl;
-
     // Create new tree
 
     int16_t Board;
@@ -116,4 +136,32 @@ void BinToRoot(
     //t->Branch("waveformCode", &waveformCode, "waveformCode/B");
     //t->Branch("numSamples", &numSamples, "numSamples/I");
     t->Branch("WfSample", &WfSample, "WfSample[numSamples]/S");
+
+    for (i=0;i<total_number_files;i++) {
+		caenFileName = input + binfiles[i];
+		cout << "Open " << caenFileName << endl;
+        fin[i] = fopen(caenFileName, "r");
+        if (!fin[i]) {
+             cout << "Error when opening file " << caenFileName << endl;
+             return;
+        } else {
+            cout << "Opened file " << caenFileName << endl;
+        }  // if (!fin[i])
+    }
+    cout << " " << endl;
+
+
+
+
+
+    // Create new directory for the root files
+    struct stat st = {0};
+
+	if (stat(target_dir + run + "/", &st) == -1) {
+		int directory1 = mkdir(target_dir + run, 0777);
+		cout << "Created new directory" << endl;
+	}
+    TFile *rootFile = new TFile(target_dir + run + "/" + run + "_without_timediff.root","RECREATE");
+	cout << "created new file " << endl;
+    
 }
